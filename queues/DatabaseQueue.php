@@ -51,7 +51,7 @@ class DatabaseQueue extends Queue implements QueueInterface
      * 添加任务记录到数据库
      * @param mixed $job
      * @param string $data
-     * @param null $queen
+     * @param null $queue
      * @return mixed
      */
     public function push($job, $data = '', $queue = null)
