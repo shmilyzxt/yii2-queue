@@ -9,17 +9,16 @@
  */
 namespace shmilyzxt\queue\queues;
 
-use shmilyzxt\queue\base\QueueInterface;
 use shmilyzxt\queue\base\Queue;
-use shmilyzxt\queue\jobs\DatabaseJob;
+use yii\db\Query;
 
-class DatabaseQueue extends Queue implements QueueInterface
+class DatabaseQueue extends Queue
 {
     /**
      * 数据库链接实例
      * @var null
      */
-    public $db=null;
+    public $db;
 
     /**
      * 存储队列任务表名称
@@ -54,7 +53,7 @@ class DatabaseQueue extends Queue implements QueueInterface
      * @param null $queue
      * @return mixed
      */
-    public function push($job, $data = '', $queue = null)
+    protected function push($job, $data = '', $queue = null)
     {
        return $this->pushToDatabase(0,$queue,$this->createPayload($job,$data));
     }
@@ -79,7 +78,7 @@ class DatabaseQueue extends Queue implements QueueInterface
      * @param null $queue
      * @return mixed
      */
-    public function later($dealy, $job, $data = '', $queue = null)
+    protected function later($dealy, $job, $data = '', $queue = null)
     {
         return $this->pushToDatabase($dealy, $queue, $this->createPayload($job,$data));
     }
@@ -94,21 +93,24 @@ class DatabaseQueue extends Queue implements QueueInterface
         $queue = $this->getQueue($queue);
 
         if (! is_null($this->expire)) {
-            $this->releaseJobsThatHaveBeenReservedTooLong($queue);
+            //$this->releaseJobsThatHaveBeenReservedTooLong($queue);
         }
+
+        $tran = $this->db->beginTransaction();
 
         if ($job = $this->getNextAvailableJob($queue)) {
             $this->markJobAsReserved($job->id);
-            $this->db->commit();
-            
-            return \Yii::createObject('shmilyzxt\queue\jobs\DatabaseJob',[
+            $tran->commit();
+            return \Yii::createObject([
+                'class' =>'shmilyzxt\queue\jobs\DatabaseJob',
                 'queue' => $queue,
                 'job' => $job,
                 'dbQueue' => $this,
             ]);
+
         }
 
-        $this->db->commit();
+        $tran->commit();
         return false;
     }
 
@@ -194,9 +196,8 @@ class DatabaseQueue extends Queue implements QueueInterface
      */
     protected function getNextAvailableJob($queue)
     {
-        $this->db->beginTransaction();
         $now = time();
-        $sql = "select *  from {$this->table} where queue='{$this->getQueue($queue)}' and reserved=0 and available_at<={$now} ORDER BY id ase limit 1 for update";
+        $sql = "select * from {$this->table} where queue='{$this->getQueue($queue)}' and reserved=0 and available_at<={$now} ORDER BY id asc limit 1 for update";
         $job = \Yii::$app->db->createCommand($sql)->queryOne();
         return $job ? (object) $job : null;
     }

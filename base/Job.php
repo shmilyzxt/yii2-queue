@@ -14,13 +14,6 @@ use yii\base\Component;
 abstract class Job extends Component
 {
     /**
-     * The job handler instance.
-     *
-     * @var mixed
-     */
-    protected $instance;
-
-    /**
      * The name of the queue the job belongs to.
      *
      * @var string
@@ -40,13 +33,40 @@ abstract class Job extends Component
      * @var bool
      */
     protected $released = false;
+    
+    /**
+     * Determine if the job was released back into the queue.
+     *
+     * @return bool
+     */
+    public function isReleased()
+    {
+        return $this->released;
+    }
 
     /**
-     * Fire the job.
+     * Determine if the job has been deleted or released.
      *
-     * @return void
+     * @return bool
      */
-    abstract public function fire();
+    public function isDeletedOrReleased()
+    {
+        return $this->isDeleted() || $this->isReleased();
+    }
+
+    /**
+     * Get the number of times the job has been attempted.
+     *
+     * @return int
+     */
+    abstract public function getAttempts();
+
+    /**
+     * Get the raw body string for the job.
+     *
+     * @return string
+     */
+    abstract public function getPayload();
 
     /**
      * Delete the job from the queue.
@@ -78,86 +98,7 @@ abstract class Job extends Component
     {
         $this->released = true;
     }
-
-    /**
-     * Determine if the job was released back into the queue.
-     *
-     * @return bool
-     */
-    public function isReleased()
-    {
-        return $this->released;
-    }
-
-    /**
-     * Determine if the job has been deleted or released.
-     *
-     * @return bool
-     */
-    public function isDeletedOrReleased()
-    {
-        return $this->isDeleted() || $this->isReleased();
-    }
-
-    /**
-     * Get the number of times the job has been attempted.
-     *
-     * @return int
-     */
-    abstract public function attempts();
-
-    /**
-     * Get the raw body string for the job.
-     *
-     * @return string
-     */
-    abstract public function getRawBody();
-
-    /**
-     * Resolve and fire the job handler method.
-     *
-     * @param  array  $payload
-     * @return void
-     */
-    protected function resolveAndFire(array $payload)
-    {
-        list($class, $method) = $this->parseJob($payload['job']);
-
-        $this->instance = $this->resolve($class);
-
-        $this->instance->{$method}($this, $payload['data']);
-    }
-
-    /**
-     * Parse the job declaration into class and method.
-     *
-     * @param  string  $job
-     * @return array
-     */
-    protected function parseJob($job)
-    {
-        $segments = explode('@', $job);
-
-        return count($segments) > 1 ? $segments : [$segments[0], 'fire'];
-    }
-
-    /**
-     * Call the failed method on the job instance.
-     *
-     * @return void
-     */
-    public function failed()
-    {
-        $payload = json_decode($this->getRawBody(), true);
-
-        list($class, $method) = $this->parseJob($payload['job']);
-
-        $this->instance = $this->resolve($class);
-
-        if (method_exists($this->instance, 'failed')) {
-            $this->instance->failed($payload['data']);
-        }
-    }
+    
 
     /**
      * Resolve the given job handler.
@@ -177,7 +118,7 @@ abstract class Job extends Component
      */
     public function getName()
     {
-        return json_decode($this->getRawBody(), true)['job'];
+        return json_decode($this->getPayload(), true)['job'];
     }
 
     /**
@@ -188,5 +129,10 @@ abstract class Job extends Component
     public function getQueue()
     {
         return $this->queue;
+    }
+
+    public function setQueue($queue)
+    {
+        $this->queue = $queue;
     }
 }

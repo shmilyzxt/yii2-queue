@@ -18,7 +18,23 @@ abstract class Queue extends Component
     const EVENT_AFTER_PUSH = 'afterPush';
     const EVENT_BEFORE_POP = 'beforePop';
     const EVENT_AFTER_POP = 'afterPop';
-    
+
+    /**
+     * 入队列
+     * @param $job
+     * @param string $data
+     * @param $queue
+     */
+    abstract protected function push($job, $data = '', $queue=null);
+
+    /**
+     * 延时入队列
+     * @param $dealy
+     * @param $job
+     * @param string $data
+     * @param $queue
+     */
+    abstract protected function later($dealy,$job,$data='',$queue=null);
     
     /**
      * 入队列
@@ -26,7 +42,7 @@ abstract class Queue extends Component
      * @param string $data
      * @param $queue
      */
-    public function pushOn($job, $data = '', $queue){
+    public function pushOn($job, $data = '', $queue=null){
         $this->trigger(self::EVENT_BEFORE_PUSH);
         $this->push($job,$data,$queue);
         $this->trigger(self::EVENT_AFTER_PUSH);
@@ -39,7 +55,7 @@ abstract class Queue extends Component
      * @param string $data
      * @param $queue
      */
-    public function laterOn($dealy, $job, $data = '', $queue){
+    public function laterOn($dealy, $job, $data = '', $queue=null){
         $this->trigger(self::EVENT_BEFORE_PUSH);
         $this->later($dealy,$job,$data,$queue);
         $this->trigger(self::EVENT_AFTER_PUSH);
@@ -86,10 +102,10 @@ abstract class Queue extends Component
      */
     protected function createPayload($job, $data = '', $queue = null)
     {
-        if (is_object($job)) {
+        if (is_object($job) && $job instanceof JobHandler) {
             return json_encode([
-                'job' => 'shmilyzxt\queue\CallQueuedHandler@call',
-                'data' => ['command' => serialize(clone $job)],
+                'job' => $job->className(),
+                'data' => $this->prepareQueueData($data),
             ]);
         }
 
