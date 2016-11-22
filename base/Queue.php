@@ -24,7 +24,7 @@ abstract class Queue extends Component
      * 入队列
      * @param $job
      * @param string $data
-     * @param $queen
+     * @param $queue
      */
     public function pushOn($job, $data = '', $queue){
         $this->trigger(self::EVENT_BEFORE_PUSH);
@@ -37,7 +37,7 @@ abstract class Queue extends Component
      * @param $dealy
      * @param $job
      * @param string $data
-     * @param $queen
+     * @param $queue
      */
     public function laterOn($dealy, $job, $data = '', $queue){
         $this->trigger(self::EVENT_BEFORE_PUSH);

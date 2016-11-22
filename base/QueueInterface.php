@@ -9,12 +9,12 @@
 namespace shmilyzxt\queue\base;
 
 
-interface QueenInterface
+interface QueueInterface
 {
     /**将一个任务加入队列
      * @param mixed $job
      * @param string $data
-     * @param null $queen
+     * @param null $queue
      */
     public function push($job,$data='',$queue=null);
 
@@ -41,7 +41,7 @@ interface QueenInterface
      * @param int $dealy 延时秒数
      * @param $job
      * @param string $data
-     * @param null $queen
+     * @param null $queue
      * @return mixed
      */
     public function later($dealy,$job,$data='',$queue=null);

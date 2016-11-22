@@ -9,11 +9,11 @@
  */
 namespace shmilyzxt\queue\queues;
 
-use shmilyzxt\queue\base\QueenInterface;
+use shmilyzxt\queue\base\QueueInterface;
 use shmilyzxt\queue\base\Queue;
 use shmilyzxt\queue\jobs\DatabaseJob;
 
-class DatabaseQueue extends Queue implements QueenInterface
+class DatabaseQueue extends Queue implements QueueInterface
 {
     /**
      * 数据库链接实例
@@ -54,9 +54,9 @@ class DatabaseQueue extends Queue implements QueenInterface
      * @param null $queen
      * @return mixed
      */
-    public function push($job, $data = '', $queen = null)
+    public function push($job, $data = '', $queue = null)
     {
-       return $this->pushToDatabase(0,$queen,$this->createPayload($job,$data));
+       return $this->pushToDatabase(0,$queue,$this->createPayload($job,$data));
     }
 
     /**
