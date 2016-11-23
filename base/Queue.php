@@ -56,6 +56,16 @@ abstract class Queue extends Component
     abstract public function pop($queue=null);
 
     /**
+     * 将一个任务重新加入队列
+     * @param $queue
+     * @param $job
+     * @param $delay
+     * @param int $attempts
+     * @return mixed
+     */
+    abstract public function release($queue, $job, $delay,$attempts=0);
+
+    /**
      * 获取当前队列中等待执行的任务数量
      */
     abstract public function getJobCount();
@@ -144,5 +154,16 @@ abstract class Queue extends Component
             return false;
         }
         return true;
+    }
+
+
+    /**
+     * 获取多列名称，默认为：queue
+     * @param $queue
+     * @return string
+     */
+    protected function getQueue($queue)
+    {
+        return $queue ?: $this->queue;
     }
 }

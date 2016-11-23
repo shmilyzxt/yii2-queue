@@ -133,7 +133,7 @@ class DatabaseQueue extends Queue
      * @param  int  $delay
      * @return mixed
      */
-    public function release($queue, $job, $delay)
+    public function release($queue, $job, $delay,$attempt=0)
     {
         return $this->pushToDatabase($delay, $queue, $job->payload, $job->attempts);
     }
@@ -161,15 +161,6 @@ class DatabaseQueue extends Queue
         return (new Query())->select(['id'])->from('jobs')->where(['reserved'=>0])->count("*",$this->db);
     }
 
-    /**
-     * 获取多列名称，默认为：queue
-     * @param $queue
-     * @return string
-     */
-    protected function getQueue($queue)
-    {
-        return $queue ?: $this->queue;
-    }
 
     /**
      * 获取任务有效时间
