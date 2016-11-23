@@ -52,7 +52,7 @@ Usage
 \Yii::$app->queue->pushOn(null,['email'=>'49783121@qq.com','title'=>'test','content'=>'email test'],'email');
 ```
 
-3:新建自己的队列处理handler，继承、shmilyzxt\queue\base\JobHandler,并实现任务处理方法handle和失败处理方法failed，一个jobhandler类似：
+3:新建自己的队列处理handler，继承、shmilyzxt\queue\base\JobHandler,并实现任务处理方法handle和失败处理方法failed，一个发邮件的jobhandler类似：
 
 ```php
 class SendMail extends JobHandler
@@ -65,6 +65,9 @@ class SendMail extends JobHandler
         }
 
         $payload = $job->getPayload();
+
+        //$payload即任务的数据，你拿到任务数据后就可以执行发邮件了
+        //TODO 发邮件
         $job->delete();
     }
 
