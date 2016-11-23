@@ -3,7 +3,7 @@ yii2-queue
 a yii2 extension to make simple to use queue.
 
 yii2-queue让队列的使用在yii2中变得更轻松，她为各种队列组件的使用提供了一个标准的接口，您只需要配置好需要使用的队列组件，就能轻松使用。
-目前支持数据库队列，redis队列，其它队列中间件支持正在添加中。
+目前支持数据库队列，redis队列，其它队列中间件支持正在添加中（当然，聪明的你也可以自行扩展）。
 
 Installation
 ------------
