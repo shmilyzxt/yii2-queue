@@ -27,12 +27,6 @@ class DatabaseQueue extends Queue
     public $table = 'jobs';
 
     /**
-     * 队列默认名称
-     * @var string
-     */
-    public $queue = 'default';
-
-    /**
      * 任务过期时间（秒）
      * @var int
      */
@@ -157,6 +151,14 @@ class DatabaseQueue extends Queue
         $available_at = $this->getAvailableAt($delay,$created_at );
         $sql = "insert into {$this->table} (queue,payload,attempts,reserved,reserved_at,available_at,created_at) VALUES ('$queue','$payload',$attempts,0,null,'$available_at','$created_at')";
         return $this->db->createCommand($sql)->execute();
+    }
+
+    /**
+     * 获取队列当前任务数量
+     */
+    public function getJobCount()
+    {
+        return (new Query())->select(['id'])->from('jobs')->where(['reserved'=>0])->count("*",$this->db);
     }
 
     /**

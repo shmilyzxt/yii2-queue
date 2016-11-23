@@ -20,6 +20,18 @@ abstract class Queue extends Component
     const EVENT_AFTER_POP = 'afterPop';
 
     /**
+     * 队列默认名称
+     * @var string
+     */
+    public $queue = 'default';
+
+    /**
+     * 队列允许最大任务数量，0代表不限制
+     * @var int
+     */
+    public $maxJob = 0;
+
+    /**
      * 入队列
      * @param $job
      * @param string $data
@@ -35,17 +47,35 @@ abstract class Queue extends Component
      * @param $queue
      */
     abstract protected function later($dealy,$job,$data='',$queue=null);
+
+    /**
+     * 出队列
+     * @param null $queue
+     * @return mixed
+     */
+    abstract public function pop($queue=null);
+
+    /**
+     * 获取当前队列中等待执行的任务数量
+     */
+    abstract public function getJobCount();
     
     /**
      * 入队列
      * @param $job
      * @param string $data
      * @param $queue
+     * @return  mixed
      */
     public function pushOn($job, $data = '', $queue=null){
-        $this->trigger(self::EVENT_BEFORE_PUSH);
-        $this->push($job,$data,$queue);
-        $this->trigger(self::EVENT_AFTER_PUSH);
+        if($this->canPush()){
+            $this->trigger(self::EVENT_BEFORE_PUSH);
+            $return =  $this->push($job,$data,$queue);
+            $this->trigger(self::EVENT_AFTER_PUSH);
+            return $return;
+        }else{
+            throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
+        }
     }
 
     /**
@@ -56,40 +86,13 @@ abstract class Queue extends Component
      * @param $queue
      */
     public function laterOn($dealy, $job, $data = '', $queue=null){
-        $this->trigger(self::EVENT_BEFORE_PUSH);
-        $this->later($dealy,$job,$data,$queue);
-        $this->trigger(self::EVENT_AFTER_PUSH);
-    }
-
-    /**
-     * 批量入队列
-     * @param $jobs
-     * @param string $data
-     * @param null $queue
-     */
-    public function pushOnJobs($jobs, $data = '', $queue = null)
-    {
-        foreach ((array) $jobs as $job) {
+        if($this->canPush()){
             $this->trigger(self::EVENT_BEFORE_PUSH);
-            $this->push($job, $data, $queue);
+            $return = $this->later($dealy,$job,$data,$queue);
             $this->trigger(self::EVENT_AFTER_PUSH);
-        }
-    }
-
-
-    /**
-     * 延时任务批量入队列
-     * @param $delay
-     * @param $jobs
-     * @param string $data
-     * @param null $queue
-     */
-    public function laterOnJobs($delay,$jobs, $data = '', $queue = null)
-    {
-        foreach ((array) $jobs as $job) {
-            $this->trigger(self::EVENT_BEFORE_PUSH);
-            $this->later($delay,$job, $data, $queue);
-            $this->trigger(self::EVENT_AFTER_PUSH);
+            return $return;
+        }else{
+            throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
     }
 
@@ -130,5 +133,16 @@ abstract class Queue extends Component
         }
 
         return $data;
+    }
+
+    /**
+     * 检查队列是否已达最大任务量
+     * @return bool
+     */
+    protected function canPush(){
+        if($this->maxJob > 0 && $this->getJobCount() >= $this->maxJob){
+            return false;
+        }
+        return true;
     }
 }
