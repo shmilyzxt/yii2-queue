@@ -1,7 +1,7 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: zhenxiaotao
+ * 任务处理handler基类
+ * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/22
  * Time: 15:37
  */
@@ -15,14 +15,14 @@ abstract  class JobHandler
      * 队列任务执行方法
      * @param  $job
      */
-    abstract public function handle($job);
+    abstract public function handle(Job $job,array $data);
 
     /**
      * 队列任务执行失败处理方法
-     * @param $job
+     * @param $palyload
      * @return mixed
      */
-    public function failed($job)
+    public function failed($palyload)
     {
         
     }

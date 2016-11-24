@@ -8,15 +8,16 @@
  */
 namespace shmilyzxt\queue;
 
+use shmilyzxt\queue\base\Job;
 use shmilyzxt\queue\base\Queue;
 use shmilyzxt\queue\base\JobHandler;
 
 class Worker
 {
-    public static function listen(Queue $queue,JobHandler $handler,$queueName='default',$memory=128,$sleep=3){
+    public static function listen(Queue $queue,$memory=128,$sleep=3){
         while (true){
-            if($job = $queue->pop($queueName)){
-                $handler->handle($job);
+            if($job = $queue->pop()){
+                $job->execute();
             }else{
                 self::sleep($sleep);
             }

@@ -10,6 +10,7 @@ namespace shmilyzxt\queue\base;
 
 
 use yii\base\Component;
+use yii\helpers\Json;
 
 abstract class Job extends Component
 {
@@ -19,6 +20,25 @@ abstract class Job extends Component
      * @var string
      */
     protected $queue;
+
+    /**
+     * Queue实例
+     * @var
+     */
+    public $queueInstance;
+
+    /**
+     * job处理handler实例
+     * @var
+     */
+    public $handler;
+
+    /**
+     * the job payload data
+     * @var
+     */
+    public $job;
+
 
     /**
      * Indicates if the job has been deleted.
@@ -98,29 +118,48 @@ abstract class Job extends Component
     {
         $this->released = true;
     }
-    
 
     /**
-     * Resolve the given job handler.
+     * Execute the job.
      *
-     * @param  string  $class
-     * @return mixed
+     * @return void
      */
-    protected function resolve($class)
+    public function execute()
     {
-        return \Yii::$container->get($class);
+        $this->resolveAndFire();
     }
     
     /**
-     * Get the name of the queued job class.
+     * Resolve and execute the job handler method.
      *
-     * @return string
+     * @param  array  $payload
+     * @return void
      */
-    public function getName()
+    protected function resolveAndFire()
     {
-        return json_decode($this->getPayload(), true)['job'];
+        $payload = Json::decode($this->getPayload());
+        $class = $payload['job'];
+        $this->handler = \Yii::$container->get($class);
+        $this->handler->handle($this,$payload['data']);
     }
 
+    /**
+     * Call the failed method on the job instance.
+     *
+     * @return void
+     */
+    public function failed()
+    {
+        $payload = Json::decode($this->getPayload());
+        $class = $payload['job'];
+        $this->handler = \Yii::$container->get($class);
+
+        if (method_exists($this->handler, 'failed')) {
+            $this->handler->failed($payload['data']);
+        }
+    }
+    
+    
     /**
      * Get the name of the queue the job belongs to.
      *
@@ -134,5 +173,36 @@ abstract class Job extends Component
     public function setQueue($queue)
     {
         $this->queue = $queue;
+    }
+
+    /*
+ * 属性设置
+ */
+    public function setJob($job){
+        $this->job = $job;
+    }
+
+    /**
+     * 属性
+     * @return mixed
+     */
+    public function getJob(){
+        return $this->getJob();
+    }
+
+    /**
+     * 属性
+     * @return mixed
+     */
+    public function getqueueInstance(){
+        return $this->queueInstance;
+    }
+
+    /**
+     * 属性
+     * @param $queueInstance
+     */
+    public function setqueueInstance($queueInstance){
+        $this->queueInstance = $queueInstance;
     }
 }

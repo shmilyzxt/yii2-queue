@@ -1,6 +1,8 @@
 <?php
 /**
  * redis队列
+ * push是通过redis列表实现队列
+ * later是通过redis有序结合实现队列
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/23
  * Time: 17:13
@@ -9,6 +11,7 @@
 namespace shmilyzxt\queue\queues;
 
 use shmilyzxt\queue\base\Queue;
+use shmilyzxt\queue\helper\ArrayHelper;
 use shmilyzxt\queue\jobs\RedisJob;
 
 class RedisQueue extends Queue
@@ -17,17 +20,18 @@ class RedisQueue extends Queue
      * redis连接实例
      */
     public $redis;
-
-    public $expire = 60;
     
     public function init()
     {
-        parent::init(); 
-        if($this->redis == null){
-            $this->redis = \Yii::$app->redis;
+        parent::init();
+
+        if(!class_exists('\Predis\Client')){
+            throw new \Exception('the extension predis\predis does not exist ,you need it to operate redis ,you can run "composer require predis/predis" to gei it!');
         }
-        if(is_array($this->redis)){
-            $this->redis = \Yii::createObject($this->redis);
+
+        if(!$this->redis instanceof \Predis\Client){
+            $this->set('connector',$this->connector );
+            $this->redis = $this->get('connector')->connect();
         }
     }
 
@@ -53,15 +57,21 @@ class RedisQueue extends Queue
         $job = $this->redis->lpop($queue);
 
         if (! is_null($job)) {
-            $this->redis->zadd($queue.':reserved', $this->getTime() + $this->expire, $job);
+            $this->redis->zadd($queue.':reserved', time() + $this->expire, $job);
 
-            return new RedisJob($this->container, $this, $job, $original);
+            return \Yii::createObject([
+                'class' =>'shmilyzxt\queue\jobs\RedisJob',
+                'queue' => $original,
+                'job' => $job,
+                'queueInstance' => $this,
+            ]);
         }
     }
 
     public function getJobCount()
     {
-        return 9999;
+        //TODO
+        return 0;
     }
 
     /**
@@ -76,8 +86,40 @@ class RedisQueue extends Queue
     public function release($queue, $payload, $delay, $attempts=0)
     {
         $payload = $this->setMeta($payload, 'attempts', $attempts);
+        $this->redis->zadd($this->getQueue($queue).':delayed', time() + $delay, $payload);
+    }
 
-        $this->redis->zadd($this->getQueue($queue).':delayed', $this->getTime() + $delay, $payload);
+    /**
+     * Create a payload string from the given job and data.
+     *
+     * @param  string  $job
+     * @param  mixed   $data
+     * @param  string  $queue
+     * @return string
+     */
+    protected function createPayload($job, $data = '', $queue = null)
+    {
+        $payload = parent::createPayload($job, $data);
+        $payload = $this->setMeta($payload, 'id', $this->getRandomId(32));
+        return $this->setMeta($payload, 'attempts', 1);
+    }
+
+    /**
+     * 创建一个随机串作为id
+     * @param int $length
+     * @return string
+     */
+    protected function getRandomId($length = 16){
+        $string = '';
+
+        while (($len = strlen($string)) < $length) {
+            $size = $length - $len;
+
+            $bytes = random_bytes($size);
+
+            $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
+        }
+        return $string;
     }
 
     /**
@@ -107,7 +149,7 @@ class RedisQueue extends Queue
             // so that we can push them onto the main queue. After we get them we simply
             // remove them from this "delay" queues. All of this within a transaction.
             $jobs = $this->getExpiredJobs(
-                $transaction, $from, $time = $this->getTime()
+                $transaction, $from, $time = time()
             );
 
             // If we actually found any jobs, we will remove them from the old queue and we
@@ -119,6 +161,18 @@ class RedisQueue extends Queue
                 $this->pushExpiredJobsOntoNewQueue($transaction, $to, $jobs);
             }
         });
+    }
+
+    /**
+     * Delete a reserved job from the queue.
+     *
+     * @param  string  $queue
+     * @param  string  $job
+     * @return void
+     */
+    public function deleteReserved($queue, $job)
+    {
+        $this->redis->zrem($this->getQueue($queue).':reserved', $job);
     }
 
     /**
@@ -158,7 +212,6 @@ class RedisQueue extends Queue
     protected function migrateAllExpiredJobs($queue)
     {
         $this->migrateExpiredJobs($queue.':delayed', $queue);
-
         $this->migrateExpiredJobs($queue.':reserved', $queue);
     }
 
@@ -173,42 +226,19 @@ class RedisQueue extends Queue
     protected function setMeta($payload, $key, $value)
     {
         $payload = json_decode($payload, true);
-        return json_encode(self::set($payload, $key, $value));
+        return json_encode(ArrayHelper::set($payload, $key, $value));
     }
 
     /**
-     * Set an array item to a given value using "dot" notation.
+     * Get the expired jobs from a given queue.
      *
-     * If no key is given to the method, the entire array will be replaced.
-     *
-     * @param  array   $array
-     * @param  string  $key
-     * @param  mixed   $value
+     * @param  \Predis\Transaction\MultiExec  $transaction
+     * @param  string  $from
+     * @param  int  $time
      * @return array
      */
-    public static function set(&$array, $key, $value)
+    protected function getExpiredJobs($transaction, $from, $time)
     {
-        if (is_null($key)) {
-            return $array = $value;
-        }
-
-        $keys = explode('.', $key);
-
-        while (count($keys) > 1) {
-            $key = array_shift($keys);
-
-            // If the key doesn't exist at this depth, we will just create an empty array
-            // to hold the next value, allowing us to create the arrays to hold final
-            // values at the correct depth. Then we'll keep digging into the array.
-            if (! isset($array[$key]) || ! is_array($array[$key])) {
-                $array[$key] = [];
-            }
-
-            $array = &$array[$key];
-        }
-
-        $array[array_shift($keys)] = $value;
-
-        return $array;
+        return $transaction->zrangebyscore($from, '-inf', $time);
     }
 }

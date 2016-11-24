@@ -19,13 +19,6 @@ class DatabaseJob extends Job
     public $job;
 
     /**
-     * DatabaseQueue实例
-     * @var
-     */
-    public $dbQueue;
-
-
-    /**
      * 获取队列任务执行次数
      * @return mixed
      */
@@ -59,7 +52,7 @@ class DatabaseJob extends Job
     {
         parent::release($delay);
         $this->delete();
-        $this->dbQueue->release($this->queue,$this->job,$delay);
+        $this->queueInstance->release($this->queue,$this->job,$delay);
     }
     
     /*
@@ -68,37 +61,6 @@ class DatabaseJob extends Job
     public function delete()
     {
         parent::delete();
-        $this->dbQueue->deleteReserved($this->queue,$this->job->id);
-    }
-
-    /*
-     * 属性设置
-     */
-    public function setJob($job){
-        $this->job = $job;
-    }
-
-    /**
-     * 属性
-     * @return mixed
-     */
-    public function getJob(){
-        return $this->getJob();
-    }
-
-    /**
-     * 属性
-     * @return mixed
-     */
-    public function getdbQueue(){
-        return $this->dbQueue;
-    }
-
-    /**
-     * 属性
-     * @param $dbQueue
-     */
-    public function setdbQueue($dbQueue){
-        $this->dbQueue = $dbQueue;
+        $this->queueInstance->deleteReserved($this->queue,$this->job->id);
     }
 }

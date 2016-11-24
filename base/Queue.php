@@ -11,8 +11,9 @@ namespace shmilyzxt\queue\base;
 
 use yii\base\Component;
 use yii\di\ServiceLocator;
+use yii\helpers\Json;
 
-abstract class Queue extends Component
+abstract class Queue extends ServiceLocator
 {
     const EVENT_BEFORE_PUSH = 'beforePush';
     const EVENT_AFTER_PUSH = 'afterPush';
@@ -30,6 +31,19 @@ abstract class Queue extends Component
      * @var int
      */
     public $maxJob = 0;
+
+    /**
+     * 队列组件连接器
+     * @var
+     */
+    public $connector;
+
+    /**
+     * 任务过期时间（秒）
+     * @var int
+     */
+    public $expire = 60;
+
 
     /**
      * 入队列
@@ -51,7 +65,7 @@ abstract class Queue extends Component
     /**
      * 出队列
      * @param null $queue
-     * @return mixed
+     * @return Job 
      */
     abstract public function pop($queue=null);
 
@@ -107,7 +121,7 @@ abstract class Queue extends Component
     }
 
     /**
-     * 将任务及任务相关数据打包
+     * 将任务及任务相关数据打包成json
      * @param  string  $job
      * @param  mixed   $data
      * @param  string  $queue
@@ -116,13 +130,13 @@ abstract class Queue extends Component
     protected function createPayload($job, $data = '', $queue = null)
     {
         if (is_object($job) && $job instanceof JobHandler) {
-            return json_encode([
-                'job' => $job->className(),
+            return Json::encode([
+                'job' => str_replace('\\','\\\\' , $job->className()),
                 'data' => $this->prepareQueueData($data),
             ]);
         }
 
-        return json_encode(['job'=>$job,'data'=>$this->prepareQueueData($data)]);
+        return Json::encode(['job'=>$job,'data'=>$this->prepareQueueData($data)]);
     }
 
     /**

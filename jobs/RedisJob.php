@@ -10,17 +10,53 @@ namespace shmilyzxt\queue\jobs;
 
 
 use shmilyzxt\queue\base\Job;
+use shmilyzxt\queue\helper\ArrayHelper;
+use yii\helpers\Json;
 
 class RedisJob extends Job
 {
 
     public function getAttempts()
     {
-        // TODO: Implement getAttempts() method.
+        return ArrayHelper::get(json_decode($this->job, true), 'attempts');
     }
 
     public function getPayload()
     {
-        // TODO: Implement getPayload() method.
+        return $this->job;
+    }
+
+    /**
+     * Get the job identifier.
+     *
+     * @return string
+     */
+    public function getJobId()
+    {
+        return ArrayHelper::get(json_decode($this->job, true), 'id');
+    }
+
+    /**
+     * Delete the job from the queue.
+     *
+     * @return void
+     */
+    public function delete()
+    {
+        parent::delete();
+        $this->queueInstance->deleteReserved($this->queue, $this->job);
+    }
+
+    /**
+     * Release the job back into the queue.
+     *
+     * @param  int   $delay
+     * @return void
+     */
+    public function release($delay = 0)
+    {
+        parent::release($delay);
+        $this->delete();
+        $this->queueInstance->release($this->queue, $this->job, $delay, $this->getAttempts() + 1);
     }
 }
