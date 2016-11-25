@@ -12,6 +12,7 @@ namespace shmilyzxt\queue\queues;
 
 use shmilyzxt\queue\base\Queue;
 use shmilyzxt\queue\helper\ArrayHelper;
+use yii\helpers\Json;
 
 class RedisQueue extends Queue
 {
@@ -229,8 +230,9 @@ class RedisQueue extends Queue
      */
     protected function setMeta($payload, $key, $value)
     {
-        $payload = json_decode($payload, true);
-        return json_encode(ArrayHelper::set($payload, $key, $value));
+        $payload = unserialize($payload);
+        $newPayload = serialize(ArrayHelper::set($payload, $key, $value));
+        return $newPayload;
     }
 
     /**
@@ -254,6 +256,7 @@ class RedisQueue extends Queue
     public function flush($queue = null)
     {
         $queue = $this->getQueue($queue);
+
         return $this->redis->del([$queue,$queue.":delayed",$queue.":reserved"]);
         
     }

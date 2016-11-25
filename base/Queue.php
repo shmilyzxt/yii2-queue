@@ -140,14 +140,14 @@ abstract class Queue extends ServiceLocator
     protected function createPayload($job, $data = '', $queue = null)
     {
         if (is_object($job) && $job instanceof JobHandler) {
-            $json =  Json::encode([
-                'job' => serialize($job),
+            $json =  serialize([
+                'job' => $job,
                 'data' => $this->prepareQueueData($data),
             ]);
             return $json;
         }
 
-        return Json::encode(['job'=>serialize($job),'data'=>$this->prepareQueueData($data)]);
+        return serialize(['job'=>$job,'data'=>$this->prepareQueueData($data)]);
     }
 
     /**

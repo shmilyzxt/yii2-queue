@@ -125,10 +125,11 @@ abstract class Job extends Component
      */
     protected function resolveAndFire()
     {
-        $payload = Json::decode($this->getPayload());
-        $class = unserialize( $payload['job']);
+        $payload = $this->getPayload();
+        $payload = unserialize( $payload);
+        $class = $payload['job'];
         $this->handler = $this->getHander($class);
-        $this->handler->handle($this, $payload['data']);
+        $this->handler->handle($this,$payload['data']);
         
         //执行完任务后删除
         if (! $this->isDeletedOrReleased()) {
@@ -136,19 +137,43 @@ abstract class Job extends Component
         }
     }
 
+
     /**
      * 任务执行失败后的处理方法（调用handler的failed方法）
      * @return void
      */
     public function failed()
     {
-        $payload = Json::decode($this->getPayload());
-        $class = unserialize( $payload['job']);
+        $payload = $this->getPayload();
+        $payload = unserialize( $payload);
+        $class = $payload['job'];
         $this->handler = $this->getHander($class);
 
         if (method_exists($this->handler, 'failed')) {
             $this->handler->failed($this,$payload['data']);
         }
+    }
+
+    /**
+     * 解析并还原payload数据
+     * @deprecated 
+     * @param $paylod
+     * @return array|mixed
+     */
+    protected function resolvePaylod($payload){
+        if(is_string($payload)){
+            return unserialize($payload);
+        }
+
+        if(is_array($payload)){
+            $ret = [];
+            foreach ($payload as $k => $v){
+                $this->resolvePaylod($v);
+            }
+            return $ret;
+        }
+
+        return $payload;
     }
 
     /**

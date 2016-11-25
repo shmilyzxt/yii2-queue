@@ -18,7 +18,7 @@ class RedisJob extends Job
 
     public function getAttempts()
     {
-        return ArrayHelper::get(json_decode($this->job, true), 'attempts');
+        return ArrayHelper::get(unserialize($this->job), 'attempts');
     }
 
     public function getPayload()
@@ -33,7 +33,7 @@ class RedisJob extends Job
      */
     public function getJobId()
     {
-        return ArrayHelper::get(json_decode($this->job, true), 'id');
+        return ArrayHelper::get(unserialize($this->job), 'id');
     }
 
     /**
