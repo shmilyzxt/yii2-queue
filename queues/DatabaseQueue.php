@@ -5,7 +5,7 @@
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/21
  * Time: 15:40
- * 需要创建数据表
+ * 需要创建数据表(数据库只支持mysql)
  */
 namespace shmilyzxt\queue\queues;
 
@@ -32,6 +32,9 @@ class DatabaseQueue extends Queue
         if(!$this->db instanceof \yii\db\Connection){
             $this->set('connector',$this->connector);
             $this->db = $this->get('connector');
+            if($this->db->driverName != 'mysql'){
+                throw new \Exception("sorry,only mysql db supported!");
+            }
         }
     }
 
