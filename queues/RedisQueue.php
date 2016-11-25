@@ -2,7 +2,7 @@
 /**
  * redis队列
  * push是通过redis列表实现队列
- * later是通过redis有序结合实现队列
+ * later是通过redis有序集合实现队列
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/23
  * Time: 17:13
@@ -16,8 +16,9 @@ use shmilyzxt\queue\jobs\RedisJob;
 
 class RedisQueue extends Queue
 {
-    /*
-     * redis连接实例
+    /**
+     * preidis连接实例
+     * @var \Predis\Client redis
      */
     public $redis;
     
@@ -68,15 +69,20 @@ class RedisQueue extends Queue
         }
     }
 
-    public function getJobCount()
+    /**
+     * 获取队列当前任务数 = 执行队列任务数 + 等待队列任务数
+     * @param null $queue
+     * @return mixed
+     */
+    public function getJobCount($queue=null)
     {
-        //TODO
-        return 0;
+        $queue = $this->getQueue($queue);
+        return $this->redis->llen($queue) + $this->redis->zcard($queue.":delayed");
     }
 
     /**
-     * Release a reserved job back onto the queue.
-     *
+     * 将任务重新加入队列中
+     * 此时，任务的尝试次数要加1
      * @param  string  $queue
      * @param  string  $payload
      * @param  int  $delay
@@ -100,7 +106,7 @@ class RedisQueue extends Queue
     protected function createPayload($job, $data = '', $queue = null)
     {
         $payload = parent::createPayload($job, $data);
-        $payload = $this->setMeta($payload, 'id', $this->getRandomId(32));
+        $payload = $this->setMeta($payload, 'id', $this->getRandomId());
         return $this->setMeta($payload, 'attempts', 1);
     }
 
@@ -109,16 +115,16 @@ class RedisQueue extends Queue
      * @param int $length
      * @return string
      */
-    protected function getRandomId($length = 16){
-        $string = '';
+    protected function getRandomId(){
+        $string = md5(time().rand(1000,9999));
 
-        while (($len = strlen($string)) < $length) {
+        /*while (($len = strlen($string)) < $length) {
             $size = $length - $len;
 
             $bytes = random_bytes($size);
 
             $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
-        }
+        }*/
         return $string;
     }
 

@@ -82,7 +82,7 @@ abstract class Queue extends ServiceLocator
     /**
      * 获取当前队列中等待执行的任务数量
      */
-    abstract public function getJobCount();
+    abstract public function getJobCount($queue=null);
     
     /**
      * 入队列
@@ -132,6 +132,7 @@ abstract class Queue extends ServiceLocator
         if (is_object($job) && $job instanceof JobHandler) {
             return Json::encode([
                 'job' => str_replace('\\','\\\\' , $job->className()),
+               // 'job' => $job->className(),
                 'data' => $this->prepareQueueData($data),
             ]);
         }

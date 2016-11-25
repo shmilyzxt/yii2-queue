@@ -141,6 +141,7 @@ class DatabaseQueue extends Queue
      * @return integer
      */
     protected function pushToDatabase($delay,$queue,$payload,$attempts=0){
+        $queue = $this->getQueue($queue);
         $created_at = time();
         $available_at = $this->getAvailableAt($delay,$created_at );
         $sql = "insert into {$this->table} (queue,payload,attempts,reserved,reserved_at,available_at,created_at) VALUES ('$queue','$payload',$attempts,0,null,'$available_at','$created_at')";
@@ -150,9 +151,15 @@ class DatabaseQueue extends Queue
     /**
      * 获取队列当前任务数量
      */
-    public function getJobCount()
+    public function getJobCount($queue=null)
     {
-        return (new Query())->select(['id'])->from('jobs')->where(['reserved'=>0])->count("*",$this->db);
+        $queue = $this->getQueue($queue);
+        return (new Query())
+            ->select(['id'])
+            ->from($this->table)
+            ->where(['reserved'=>0])
+            ->andWhere(['queue'=>$queue])
+            ->count("*",$this->db);
     }
 
 

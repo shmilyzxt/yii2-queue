@@ -138,9 +138,14 @@ abstract class Job extends Component
     protected function resolveAndFire()
     {
         $payload = Json::decode($this->getPayload());
-        $class = $payload['job'];
+        $class = str_replace('\\\\','\\' , $payload['job']);
         $this->handler = \Yii::$container->get($class);
         $this->handler->handle($this,$payload['data']);
+        
+        //执行完任务后删除
+        if (! $this->isDeletedOrReleased()) {
+            $this->delete();
+        }
     }
 
     /**
@@ -150,9 +155,11 @@ abstract class Job extends Component
      */
     public function failed()
     {
-        $payload = Json::decode($this->getPayload());
-        $class = $payload['job'];
-        $this->handler = \Yii::$container->get($class);
+        if(!$this->handler instanceof JobHandler){
+            $payload = Json::decode($this->getPayload());
+            $class = str_replace('\\\\','\\' , $payload['job']);
+            $this->handler = \Yii::$container->get($class);
+        }
 
         if (method_exists($this->handler, 'failed')) {
             $this->handler->failed($payload['data']);
