@@ -16,7 +16,7 @@ class DatabaseQueue extends Queue
 {
     /**
      * 数据库链接实例
-     * @var null
+     * @var \yii\db\Connection
      */
     public $db;
 
@@ -85,7 +85,7 @@ class DatabaseQueue extends Queue
         $queue = $this->getQueue($queue);
 
         if (! is_null($this->expire)) {
-            //$this->releaseJobsThatHaveBeenReservedTooLong($queue);
+            $this->releaseJobsThatHaveBeenReservedTooLong($queue);
         }
 
         $tran = $this->db->beginTransaction();
@@ -107,6 +107,21 @@ class DatabaseQueue extends Queue
     }
 
     /**
+     * 清空数据库队列
+     * @param null $queue
+     * @return integer
+     * @throws \Exception execution failed
+     */
+    public function flush($queue = null)
+    {
+        $queue = $this->getQueue($queue);
+        
+        return $this->db->createCommand()
+            ->delete("jobs","queue='{$queue}'")
+            ->execute();
+    }
+
+    /**
      * 从队列中删除一个已经处理过的任务
      *
      * @param  string  $queue
@@ -115,8 +130,9 @@ class DatabaseQueue extends Queue
      */
     public function deleteReserved($queue, $id)
     {
-        $sql = "delete from {$this->table} where id={$id}";
-        return $this->db->createCommand($sql)->execute();
+        return $this->db->createCommand()
+            ->delete("jobs","id={$id}")
+            ->execute();
     }
 
     /**
@@ -144,8 +160,15 @@ class DatabaseQueue extends Queue
         $queue = $this->getQueue($queue);
         $created_at = time();
         $available_at = $this->getAvailableAt($delay,$created_at );
-        $sql = "insert into {$this->table} (queue,payload,attempts,reserved,reserved_at,available_at,created_at) VALUES ('$queue','$payload',$attempts,0,null,'$available_at','$created_at')";
-        return $this->db->createCommand($sql)->execute();
+        return $this->db->createCommand()->insert('jobs',[
+            'queue' => $queue,
+            'payload' => $payload,
+            'attempts' => $attempts,
+            'reserved' => 0,
+            'reserved_at' => null,
+            'available_at' => $available_at,
+            'created_at' => $created_at
+        ])->execute();
     }
 
     /**

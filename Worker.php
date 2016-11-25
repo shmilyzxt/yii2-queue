@@ -24,12 +24,17 @@ class Worker
     public static function listen(Queue $queue,$queueName='default',$attempt=10,$memory=128,$sleep=3){
         while (true){
             $job = $queue->pop($queueName);
-            echo $queue->getJobCount($queueName)."\r\n";
             if($job instanceof Job){
+               // echo $queue->getJobCount($queueName)."\r\n";
+                echo $job->getAttempts()."\r\n";
                 if($job->getAttempts() > $attempt){
                     $job->failed();
                 }else{
-                    $job->execute();
+                    try{
+                        $job->execute();
+                    }catch (\Exception $e){
+                        $job->release();
+                    }
                 }
             }else{
                 self::sleep($sleep);
@@ -42,8 +47,7 @@ class Worker
     }
 
     /**
-     * Determine if the memory limit has been exceeded.
-     *
+     * 判断内存使用是否超出
      * @param  int   $memoryLimit
      * @return bool
      */

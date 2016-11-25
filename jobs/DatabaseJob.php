@@ -18,6 +18,12 @@ class DatabaseJob extends Job
      */
     public $job;
 
+    public function init()
+    {
+        parent::init();
+        $this->job->attempts = $this->job->attempts + 1;
+    }
+
     /**
      * 获取队列任务执行次数
      * @return mixed
@@ -48,7 +54,7 @@ class DatabaseJob extends Job
      * 将任务重新加入队列
      * @param int $delay
      */
-    public function relaese($delay=0)
+    public function release($delay=0)
     {
         parent::release($delay);
         $this->delete();

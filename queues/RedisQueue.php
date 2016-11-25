@@ -12,7 +12,6 @@ namespace shmilyzxt\queue\queues;
 
 use shmilyzxt\queue\base\Queue;
 use shmilyzxt\queue\helper\ArrayHelper;
-use shmilyzxt\queue\jobs\RedisJob;
 
 class RedisQueue extends Queue
 {
@@ -36,16 +35,37 @@ class RedisQueue extends Queue
         }
     }
 
+    /**
+     * 入队列
+     * @param $job
+     * @param string $data
+     * @param null $queue
+     * @return int
+     */
     protected function push($job, $data = '', $queue = null)
     {
         return $this->redis->rpush($this->getQueue($queue), $this->createPayload($job,$data,$queue));
     }
 
+    /**
+     * 延时任务入队列
+     * @param $dealy
+     * @param $job
+     * @param string $data
+     * @param null $queue
+     * @return int
+     */
     protected function later($dealy, $job, $data = '', $queue = null)
     {
         return $this->redis->zadd($this->getQueue($queue).':delayed', time() + $dealy, $this->createPayload($job,$data,$queue));
     }
 
+    /**
+     * 出队列
+     * @param null $queue
+     * @return object
+     * @throws \yii\base\InvalidConfigException
+     */
     public function pop($queue = null)
     {
         $original = $queue ?: $this->queue;
@@ -67,6 +87,8 @@ class RedisQueue extends Queue
                 'queueInstance' => $this,
             ]);
         }
+
+        return false;
     }
 
     /**
@@ -96,8 +118,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Create a payload string from the given job and data.
-     *
+     * 给队列数据添加id和attempts字段
      * @param  string  $job
      * @param  mixed   $data
      * @param  string  $queue
@@ -117,20 +138,11 @@ class RedisQueue extends Queue
      */
     protected function getRandomId(){
         $string = md5(time().rand(1000,9999));
-
-        /*while (($len = strlen($string)) < $length) {
-            $size = $length - $len;
-
-            $bytes = random_bytes($size);
-
-            $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
-        }*/
         return $string;
     }
 
     /**
-     * Get the queue or return the default.
-     *
+     * 获取队列名称（即redis里面的key）
      * @param  string|null  $queue
      * @return string
      */
@@ -140,8 +152,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Migrate the delayed jobs that are ready to the regular queue.
-     *
+     * 当延时任务到大执行时间时，将延时任务从延时任务集合中移动到主执行队列中
      * @param  string  $from
      * @param  string  $to
      * @return void
@@ -149,29 +160,21 @@ class RedisQueue extends Queue
     public function migrateExpiredJobs($from, $to)
     {
         $options = ['cas' => true, 'watch' => $from, 'retry' => 10];
-
         $this->redis->transaction($options, function ($transaction) use ($from, $to) {
-            // First we need to get all of jobs that have expired based on the current time
-            // so that we can push them onto the main queue. After we get them we simply
-            // remove them from this "delay" queues. All of this within a transaction.
+            //首先需要获取延时集合里的所有已经到执行时间的任务，然后把这些任务转移到主执行队列列表中，这里使用了redis事务。
             $jobs = $this->getExpiredJobs(
                 $transaction, $from, $time = time()
             );
-
-            // If we actually found any jobs, we will remove them from the old queue and we
-            // will insert them onto the new (ready) "queue". This means they will stand
-            // ready to be processed by the queue worker whenever their turn comes up.
+            
             if (count($jobs) > 0) {
                 $this->removeExpiredJobs($transaction, $from, $time);
-
                 $this->pushExpiredJobsOntoNewQueue($transaction, $to, $jobs);
             }
         });
     }
 
     /**
-     * Delete a reserved job from the queue.
-     *
+     * 从已处理集合中删除一个任务
      * @param  string  $queue
      * @param  string  $job
      * @return void
@@ -182,8 +185,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Remove the expired jobs from a given queue.
-     *
+     * 从指定队列删除过期任务
      * @param  \Predis\Transaction\MultiExec  $transaction
      * @param  string  $from
      * @param  int  $time
@@ -192,13 +194,11 @@ class RedisQueue extends Queue
     protected function removeExpiredJobs($transaction, $from, $time)
     {
         $transaction->multi();
-
         $transaction->zremrangebyscore($from, '-inf', $time);
     }
 
     /**
-     * Push all of the given jobs onto another queue.
-     *
+     * 将任务从一个队列移动到另一个队列
      * @param  \Predis\Transaction\MultiExec  $transaction
      * @param  string  $to
      * @param  array  $jobs
@@ -210,8 +210,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Migrate all of the waiting jobs in the queue.
-     *
+     * 合并等待执行和已经处理的任务
      * @param  string  $queue
      * @return void
      */
@@ -222,8 +221,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Set additional meta on a payload string.
-     *
+     * 在输入数据中添加新的字段
      * @param  string  $payload
      * @param  string  $key
      * @param  string  $value
@@ -236,8 +234,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Get the expired jobs from a given queue.
-     *
+     * 从指定队列中获取所有超时的任务
      * @param  \Predis\Transaction\MultiExec  $transaction
      * @param  string  $from
      * @param  int  $time
@@ -246,5 +243,18 @@ class RedisQueue extends Queue
     protected function getExpiredJobs($transaction, $from, $time)
     {
         return $transaction->zrangebyscore($from, '-inf', $time);
+    }
+
+    /**
+     * 清空指定队列
+     * @param null $queue
+     * @return integer
+     * @throws \Exception execution failed
+     */
+    public function flush($queue = null)
+    {
+        $queue = $this->getQueue($queue);
+        return $this->redis->del([$queue,$queue.":delayed",$queue.":reserved"]);
+        
     }
 }

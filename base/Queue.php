@@ -1,6 +1,6 @@
 <?php
 /**
- * 队列抽象基类.
+ * 队列抽象基类.一个Queue的实例代表一个队列
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/21
  * Time: 13:20
@@ -80,6 +80,13 @@ abstract class Queue extends ServiceLocator
     abstract public function release($queue, $job, $delay,$attempts=0);
 
     /**
+     * 清空某个队列
+     * @param null $queue 队列名称，为空则清空default队列
+     * @return mixed
+     */
+    abstract public function flush($queue=null);
+
+    /**
      * 获取当前队列中等待执行的任务数量
      */
     abstract public function getJobCount($queue=null);
@@ -90,6 +97,7 @@ abstract class Queue extends ServiceLocator
      * @param string $data
      * @param $queue
      * @return  mixed
+     * @throws \Exception
      */
     public function pushOn($job, $data = '', $queue=null){
         if($this->canPush()){
@@ -108,6 +116,8 @@ abstract class Queue extends ServiceLocator
      * @param $job
      * @param string $data
      * @param $queue
+     * @return mixed
+     * @throws \Exception
      */
     public function laterOn($dealy, $job, $data = '', $queue=null){
         if($this->canPush()){
@@ -130,14 +140,14 @@ abstract class Queue extends ServiceLocator
     protected function createPayload($job, $data = '', $queue = null)
     {
         if (is_object($job) && $job instanceof JobHandler) {
-            return Json::encode([
-                'job' => str_replace('\\','\\\\' , $job->className()),
-               // 'job' => $job->className(),
+            $json =  Json::encode([
+                'job' => serialize($job),
                 'data' => $this->prepareQueueData($data),
             ]);
+            return $json;
         }
 
-        return Json::encode(['job'=>$job,'data'=>$this->prepareQueueData($data)]);
+        return Json::encode(['job'=>serialize($job),'data'=>$this->prepareQueueData($data)]);
     }
 
     /**
@@ -156,7 +166,6 @@ abstract class Queue extends ServiceLocator
                 return $d;
             }, $data);
         }
-
         return $data;
     }
 
