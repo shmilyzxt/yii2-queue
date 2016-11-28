@@ -257,7 +257,6 @@ class RedisQueue extends Queue
     public function flush($queue = null)
     {
         $queue = $this->getQueue($queue);
-
         return $this->connector->del([$queue,$queue.":delayed",$queue.":reserved"]);
         
     }

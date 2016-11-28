@@ -9,6 +9,8 @@
 namespace shmilyzxt\queue\base;
 
 
+use common\tools\var_dumper;
+use SuperClosure\Serializer;
 use yii\base\Component;
 use yii\di\ServiceLocator;
 use yii\helpers\Json;
@@ -33,7 +35,7 @@ abstract class Queue extends ServiceLocator
     public $maxJob = 0;
 
     /**
-     * 队列组件连接器(可以为数据链接，predis链接，其它队列中间件链接)
+     * 队列组件连接器(可以为数据链接，predis链接，或者其它队列中间件链接)
      * @var
      */
     public $connector;
@@ -139,15 +141,25 @@ abstract class Queue extends ServiceLocator
      */
     protected function createPayload($job, $data = '', $queue = null)
     {
-        if (is_object($job) && $job instanceof JobHandler) {
+        if ($job instanceof \Closure) {
+            $serializer = new Serializer();
+            $serialized = $serializer->serialize($job);
+
+            return serialize([
+                'type' => 'closure',
+                'job' => $serialized,
+                'data' => $data
+            ]);
+        }else if (is_object($job) && $job instanceof JobHandler) {
             $json =  serialize([
+                'type' => 'class',
                 'job' => $job,
                 'data' => $this->prepareQueueData($data),
             ]);
             return $json;
         }
 
-        return serialize(['job'=>$job,'data'=>$this->prepareQueueData($data)]);
+        return serialize(['type'=>'string','job'=>$job,'data'=>$this->prepareQueueData($data)]);
     }
 
     /**

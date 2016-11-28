@@ -9,6 +9,7 @@
 namespace shmilyzxt\queue\base;
 
 
+use SuperClosure\Serializer;
 use yii\base\Component;
 use yii\helpers\Json;
 
@@ -127,9 +128,15 @@ abstract class Job extends Component
     {
         $payload = $this->getPayload();
         $payload = unserialize( $payload);
+        $type = $payload['type'];
         $class = $payload['job'];
-        $this->handler = $this->getHander($class);
-        $this->handler->handle($this,$payload['data']);
+
+        if( $type == 'closure' && ($closure = (new Serializer())->unserialize($class)) instanceof \Closure){
+            $closure($payload['data']);
+        }else{
+            $this->handler = $this->getHander($class);
+            $this->handler->handle($this,$payload['data']);
+        }
         
         //执行完任务后删除
         if (! $this->isDeletedOrReleased()) {
@@ -218,7 +225,7 @@ abstract class Job extends Component
      * @return mixed
      */
     public function getJob(){
-        return $this->getJob();
+        return $this->job;
     }
 
     /**

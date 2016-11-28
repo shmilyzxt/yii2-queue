@@ -26,7 +26,7 @@ class Worker
             $job = $queue->pop($queueName);
             if($job instanceof Job){
                // echo $queue->getJobCount($queueName)."\r\n";
-                echo $job->getAttempts()."\r\n";
+                //echo $job->getAttempts()."\r\n";
                 if($job->getAttempts() > $attempt){
                     $job->failed();
                 }else{
