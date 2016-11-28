@@ -11,12 +11,10 @@ namespace shmilyzxt\queue\connectors;
 
 use yii\base\Component;
 
-class DatabaseConnector extends Component
+class DatabaseConnector extends Component implements IConnector
 {
-
-    public function  init()
+    public function connect()
     {
-        parent::init();
         throw new \Exception('you should use yii\db\Connection as the database connector!');
     }
 }

@@ -11,7 +11,7 @@ namespace shmilyzxt\queue\connectors;
 
 use yii\base\Component;
 
-class PredisConnector extends Component
+class PredisConnector extends Component implements IConnector
 {
     public $parameters;
     public $options;
