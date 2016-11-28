@@ -15,18 +15,8 @@ class PredisConnector extends Component implements IConnector
 {
     public $parameters;
     public $options;
-    public static $predis;
-
-    public function init()
-    {
-        parent::init();
-    }
 
     public function connect(){
-        if(!self::$predis instanceof \Predis\Client){
-            self::$predis = new \Predis\Client($this->parameters,$this->options);
-        }
-
-        return self::$predis;
+        return new \Predis\Client($this->parameters,$this->options);
     }
 }

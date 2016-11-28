@@ -15,11 +15,10 @@ use yii\db\Query;
 class DatabaseQueue extends Queue
 {
     /**
-     * 数据库链接实例
-     * @var \yii\db\Connection
+     * @var \Yii\db\Connection
      */
-    public $db;
-
+    public $connector;
+    
     /**
      * 存储队列任务表名称
      * @var string
@@ -29,10 +28,10 @@ class DatabaseQueue extends Queue
     public function init()
     {
         parent::init();
-        if(!$this->db instanceof \yii\db\Connection){
-            $this->set('connector',$this->connector);
-            $this->db = $this->get('connector');
-            if($this->db->driverName != 'mysql'){
+        if(!$this->connector instanceof \yii\db\Connection){
+            \Yii::$container->setSingleton('connector',$this->connector);
+            $this->connector = \Yii::$container->get('connector');
+            if($this->connector->driverName != 'mysql'){
                 throw new \Exception("sorry,only mysql db supported!");
             }
         }
@@ -91,7 +90,7 @@ class DatabaseQueue extends Queue
             $this->releaseJobsThatHaveBeenReservedTooLong($queue);
         }
 
-        $tran = $this->db->beginTransaction();
+        $tran = $this->connector->beginTransaction();
 
         if ($job = $this->getNextAvailableJob($queue)) {
             $this->markJobAsReserved($job->id);
@@ -119,7 +118,7 @@ class DatabaseQueue extends Queue
     {
         $queue = $this->getQueue($queue);
         
-        return $this->db->createCommand()
+        return $this->connector->createCommand()
             ->delete("jobs","queue='{$queue}'")
             ->execute();
     }
@@ -133,7 +132,7 @@ class DatabaseQueue extends Queue
      */
     public function deleteReserved($queue, $id)
     {
-        return $this->db->createCommand()
+        return $this->connector->createCommand()
             ->delete("jobs","id={$id}")
             ->execute();
     }
@@ -163,7 +162,7 @@ class DatabaseQueue extends Queue
         $queue = $this->getQueue($queue);
         $created_at = time();
         $available_at = $this->getAvailableAt($delay,$created_at );
-        return $this->db->createCommand()->insert('jobs',[
+        return $this->connector->createCommand()->insert('jobs',[
             'queue' => $queue,
             'payload' => $payload,
             'attempts' => $attempts,
@@ -185,7 +184,7 @@ class DatabaseQueue extends Queue
             ->from($this->table)
             ->where(['reserved'=>0])
             ->andWhere(['queue'=>$queue])
-            ->count("*",$this->db);
+            ->count("*",$this->connector);
     }
 
 
@@ -208,7 +207,7 @@ class DatabaseQueue extends Queue
     {
         $expired = time() + $this->expire;
         $sql = "update {$this->table} set reserved=0,reserved_at=null,attempts=attempts+1 where queue='{$this->getQueue($queue)}' and reserved=1 and reserved_at<={$expired}";
-        return $this->db->createCommand($sql)->execute();
+        return $this->connector->createCommand($sql)->execute();
 
     }
 
@@ -236,6 +235,6 @@ class DatabaseQueue extends Queue
     {
         $now = time();
         $sql = "update {$this->table} set reserved=1,reserved_at={$now} where id={$id}";
-        return $this->db->createCommand($sql)->execute();
+        return $this->connector->createCommand($sql)->execute();
     }
 }

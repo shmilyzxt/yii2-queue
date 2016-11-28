@@ -10,6 +10,7 @@
 
 namespace shmilyzxt\queue\queues;
 
+use common\tools\var_dumper;
 use shmilyzxt\queue\base\Queue;
 use shmilyzxt\queue\helper\ArrayHelper;
 use yii\helpers\Json;
@@ -17,10 +18,10 @@ use yii\helpers\Json;
 class RedisQueue extends Queue
 {
     /**
-     * preidis连接实例
-     * @var \Predis\Client redis
+     * predis连接实例
+     * @var \Predis\Client
      */
-    public $redis;
+    public $connector;
     
     public function init()
     {
@@ -29,10 +30,10 @@ class RedisQueue extends Queue
         if(!class_exists('\Predis\Client')){
             throw new \Exception('the extension predis\predis does not exist ,you need it to operate redis ,you can run "composer require predis/predis" to gei it!');
         }
-
-        if(!$this->redis instanceof \Predis\Client){
-            $this->set('connector',$this->connector );
-            $this->redis = $this->get('connector')->connect();
+        
+        if(!$this->connector instanceof \Predis\Client){
+            \Yii::$container->setSingleton('connector',$this->connector );
+            $this->connector = \Yii::$container->get("connector")->connect();
         }
     }
 
@@ -45,7 +46,7 @@ class RedisQueue extends Queue
      */
     protected function push($job, $data = '', $queue = null)
     {
-        return $this->redis->rpush($this->getQueue($queue), $this->createPayload($job,$data,$queue));
+        return $this->connector->rpush($this->getQueue($queue), $this->createPayload($job,$data,$queue));
     }
 
     /**
@@ -58,7 +59,7 @@ class RedisQueue extends Queue
      */
     protected function later($dealy, $job, $data = '', $queue = null)
     {
-        return $this->redis->zadd($this->getQueue($queue).':delayed', time() + $dealy, $this->createPayload($job,$data,$queue));
+        return $this->connector->zadd($this->getQueue($queue).':delayed', time() + $dealy, $this->createPayload($job,$data,$queue));
     }
 
     /**
@@ -76,10 +77,10 @@ class RedisQueue extends Queue
             $this->migrateAllExpiredJobs($queue);
         }
 
-        $job = $this->redis->lpop($queue);
+        $job = $this->connector->lpop($queue);
 
         if (! is_null($job)) {
-            $this->redis->zadd($queue.':reserved', time() + $this->expire, $job);
+            $this->connector->zadd($queue.':reserved', time() + $this->expire, $job);
 
             return \Yii::createObject([
                 'class' =>'shmilyzxt\queue\jobs\RedisJob',
@@ -100,7 +101,7 @@ class RedisQueue extends Queue
     public function getJobCount($queue=null)
     {
         $queue = $this->getQueue($queue);
-        return $this->redis->llen($queue) + $this->redis->zcard($queue.":delayed");
+        return $this->connector->llen($queue) + $this->connector->zcard($queue.":delayed");
     }
 
     /**
@@ -115,7 +116,7 @@ class RedisQueue extends Queue
     public function release($queue, $payload, $delay, $attempts=0)
     {
         $payload = $this->setMeta($payload, 'attempts', $attempts);
-        $this->redis->zadd($this->getQueue($queue).':delayed', time() + $delay, $payload);
+        $this->connector->zadd($this->getQueue($queue).':delayed', time() + $delay, $payload);
     }
 
     /**
@@ -161,7 +162,7 @@ class RedisQueue extends Queue
     public function migrateExpiredJobs($from, $to)
     {
         $options = ['cas' => true, 'watch' => $from, 'retry' => 10];
-        $this->redis->transaction($options, function ($transaction) use ($from, $to) {
+        $this->connector->transaction($options, function ($transaction) use ($from, $to) {
             //首先需要获取延时集合里的所有已经到执行时间的任务，然后把这些任务转移到主执行队列列表中，这里使用了redis事务。
             $jobs = $this->getExpiredJobs(
                 $transaction, $from, $time = time()
@@ -182,7 +183,7 @@ class RedisQueue extends Queue
      */
     public function deleteReserved($queue, $job)
     {
-        $this->redis->zrem($this->getQueue($queue).':reserved', $job);
+        $this->connector->zrem($this->getQueue($queue).':reserved', $job);
     }
 
     /**
@@ -257,7 +258,7 @@ class RedisQueue extends Queue
     {
         $queue = $this->getQueue($queue);
 
-        return $this->redis->del([$queue,$queue.":delayed",$queue.":reserved"]);
+        return $this->connector->del([$queue,$queue.":delayed",$queue.":reserved"]);
         
     }
 }

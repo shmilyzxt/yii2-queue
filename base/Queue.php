@@ -33,7 +33,7 @@ abstract class Queue extends ServiceLocator
     public $maxJob = 0;
 
     /**
-     * 队列组件连接器
+     * 队列组件连接器(可以为数据链接，predis链接，其它队列中间件链接)
      * @var
      */
     public $connector;
