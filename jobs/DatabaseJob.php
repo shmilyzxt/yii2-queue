@@ -46,7 +46,8 @@ class DatabaseJob extends Job
      * 获取对垒任务id
      * @return mixed
      */
-    public function getJobId(){
+    public function getJobId()
+    {
         return $this->job->id;
     }
 
@@ -54,19 +55,19 @@ class DatabaseJob extends Job
      * 将任务重新加入队列
      * @param int $delay
      */
-    public function release($delay=0)
+    public function release($delay = 0)
     {
         parent::release($delay);
         $this->delete();
-        $this->queueInstance->release($this->queue,$this->job,$delay);
+        $this->queueInstance->release($this->queue, $this->job, $delay);
     }
-    
+
     /*
      * 删除任务
      */
     public function delete()
     {
         parent::delete();
-        $this->queueInstance->deleteReserved($this->queue,$this->job->id);
+        $this->queueInstance->deleteReserved($this->queue, $this->job->id);
     }
 }

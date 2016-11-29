@@ -19,6 +19,6 @@ class PheanstalkConnector extends Component implements IConnector
 
     public function connect()
     {
-        return new Pheanstalk($this->host,$this->port);
+        return new Pheanstalk($this->host, $this->port);
     }
 }

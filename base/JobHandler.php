@@ -9,13 +9,13 @@
 namespace shmilyzxt\queue\base;
 
 
-abstract  class JobHandler
+abstract class JobHandler
 {
     /**
      * 从队列中拿到任务和相关数据后，需要对任务进行处理
      * @param  $job
      */
-    abstract public function handle($job,$data);
+    abstract public function handle($job, $data);
 
     /**
      * 队列任务执行失败处理方法
@@ -23,7 +23,7 @@ abstract  class JobHandler
      * @return mixed
      */
     /*abstract public function failed($job,$data);*/
-   
+
 
     /**
      * @return string

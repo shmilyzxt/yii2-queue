@@ -8,12 +8,8 @@
 
 namespace shmilyzxt\queue\queues;
 
-
-use common\tools\var_dumper;
 use Pheanstalk\Pheanstalk;
-use shmilyzxt\queue\base\Job;
 use shmilyzxt\queue\base\Queue;
-use shmilyzxt\queue\jobs\BeanstalkdJob;
 
 class BeanstalkdQueue extends Queue
 {
@@ -22,17 +18,17 @@ class BeanstalkdQueue extends Queue
      * @var \Pheanstalk\Pheanstalk
      */
     public $connector;
-    
+
     public function init()
     {
         parent::init();
 
-        if(!class_exists('\Pheanstalk\Pheanstalk')){
+        if (!class_exists('\Pheanstalk\Pheanstalk')) {
             throw new \Exception('the extension pda\pheanstalk does not exist ,you need it to operate beanstalkd ,you can run "composer require pda/pheanstalk" to gei it!');
         }
 
-        if(!$this->connector instanceof \Pheanstalk\Pheanstalk){
-            \Yii::$container->setSingleton('connector',$this->connector );
+        if (!$this->connector instanceof \Pheanstalk\Pheanstalk) {
+            \Yii::$container->setSingleton('connector', $this->connector);
             $this->connector = \Yii::$container->get("connector")->connect();
         }
     }
@@ -45,7 +41,7 @@ class BeanstalkdQueue extends Queue
      */
     protected function push($job, $data = '', $queue = null)
     {
-        $payload = $this->createPayload($job,$data);
+        $payload = $this->createPayload($job, $data);
         return $this->connector->useTube($this->getQueue($queue))->put(
             $payload, Pheanstalk::DEFAULT_PRIORITY, Pheanstalk::DEFAULT_DELAY, $this->expire
         );
@@ -78,18 +74,18 @@ class BeanstalkdQueue extends Queue
         $queue = $this->getQueue($queue);
         $job = $this->connector->watchOnly($queue)->reserve(0);
 
-        if ($job instanceof \Pheanstalk\Job ) {
+        if ($job instanceof \Pheanstalk\Job) {
 
-            $config = array_merge($this->jobEvent,[
-                'class' =>'shmilyzxt\queue\jobs\BeanstalkdJob',
+            $config = array_merge($this->jobEvent, [
+                'class' => 'shmilyzxt\queue\jobs\BeanstalkdJob',
                 'queue' => $queue,
                 'job' => $job,
                 'queueInstance' => $this,
             ]);
-            
+
             return \Yii::createObject($config);
         }
-        
+
         return false;
     }
 
@@ -99,7 +95,7 @@ class BeanstalkdQueue extends Queue
      * @param $job
      * @param $delay
      * @param int $attempts
-     * @return 
+     * @return
      */
     public function release($queue, $job, $delay, $attempts = 0)
     {
@@ -131,14 +127,15 @@ class BeanstalkdQueue extends Queue
     {
         $queue = $this->getQueue($queue);
         $statsTube = $this->connector->statsTube($queue);
-        return (int) $statsTube->current_jobs_ready + (int) $statsTube->current_jobs_delayed;
+        return (int)$statsTube->current_jobs_ready + (int)$statsTube->current_jobs_delayed;
     }
 
     /**
      * 后去当前beanstalkd里面被监听的tube
      * @return array
      */
-    public function listTubesWatched(){
+    public function listTubesWatched()
+    {
         return $this->connector->listTubeUsed();
     }
 }

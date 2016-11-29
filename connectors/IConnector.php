@@ -11,5 +11,5 @@ namespace shmilyzxt\queue\connectors;
 
 Interface IConnector
 {
-    public  function connect();
+    public function connect();
 }

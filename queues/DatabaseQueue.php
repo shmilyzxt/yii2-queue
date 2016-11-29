@@ -9,7 +9,6 @@
  */
 namespace shmilyzxt\queue\queues;
 
-use common\tools\var_dumper;
 use shmilyzxt\queue\base\Queue;
 use yii\db\Query;
 
@@ -19,20 +18,20 @@ class DatabaseQueue extends Queue
      * @var \Yii\db\Connection
      */
     public $connector;
-    
+
     /**
      * 存储队列任务表名称
      * @var string
      */
     public $table = 'jobs';
-    
+
     public function init()
     {
         parent::init();
-        if(!$this->connector instanceof \yii\db\Connection){
-            \Yii::$container->setSingleton('connector',$this->connector);
+        if (!$this->connector instanceof \yii\db\Connection) {
+            \Yii::$container->setSingleton('connector', $this->connector);
             $this->connector = \Yii::$container->get('connector');
-            if($this->connector->driverName != 'mysql'){
+            if ($this->connector->driverName != 'mysql') {
                 throw new \Exception("sorry,only mysql db supported!");
             }
         }
@@ -48,7 +47,7 @@ class DatabaseQueue extends Queue
     protected function push($job, $data = '', $queue = null)
     {
         $queue = $this->getQueue($queue);
-       return $this->pushToDatabase(0,$queue,$this->createPayload($job,$data));
+        return $this->pushToDatabase(0, $queue, $this->createPayload($job, $data));
     }
 
     /**
@@ -75,7 +74,7 @@ class DatabaseQueue extends Queue
     protected function later($dealy, $job, $data = '', $queue = null)
     {
         $queue = $this->getQueue($queue);
-        return $this->pushToDatabase($dealy, $queue, $this->createPayload($job,$data));
+        return $this->pushToDatabase($dealy, $queue, $this->createPayload($job, $data));
     }
 
     /**
@@ -83,11 +82,11 @@ class DatabaseQueue extends Queue
      * @param null $queue
      * @return mixed
      */
-    public function pop($queue=null)
+    public function pop($queue = null)
     {
         $queue = $this->getQueue($queue);
 
-        if (! is_null($this->expire)) {
+        if (!is_null($this->expire)) {
             $this->releaseJobsThatHaveBeenReservedTooLong($queue);
         }
 
@@ -97,13 +96,13 @@ class DatabaseQueue extends Queue
             $this->markJobAsReserved($job->id);
             $tran->commit();
 
-            $config = array_merge($this->jobEvent,[
-                'class' =>'shmilyzxt\queue\jobs\DatabaseJob',
+            $config = array_merge($this->jobEvent, [
+                'class' => 'shmilyzxt\queue\jobs\DatabaseJob',
                 'queue' => $queue,
                 'job' => $job,
                 'queueInstance' => $this,
             ]);
-            
+
             return \Yii::createObject($config);
 
         }
@@ -120,35 +119,35 @@ class DatabaseQueue extends Queue
     public function flush($queue = null)
     {
         $queue = $this->getQueue($queue);
-        
+
         return $this->connector->createCommand()
-            ->delete("jobs","queue='{$queue}'")
+            ->delete("jobs", "queue='{$queue}'")
             ->execute();
     }
 
     /**
      * 从队列中删除一个已经处理过的任务
      *
-     * @param  string  $queue
-     * @param  string  $id
+     * @param  string $queue
+     * @param  string $id
      * @return mixed
      */
     public function deleteReserved($queue, $id)
     {
         return $this->connector->createCommand()
-            ->delete("jobs","id={$id}")
+            ->delete("jobs", "id={$id}")
             ->execute();
     }
 
     /**
      * 将一个任务重新加入队列
      *
-     * @param  string  $queue
-     * @param  \StdClass  $job
-     * @param  int  $delay
+     * @param  string $queue
+     * @param  \StdClass $job
+     * @param  int $delay
      * @return mixed
      */
-    public function release($queue, $job, $delay,$attempt=0)
+    public function release($queue, $job, $delay, $attempt = 0)
     {
         return $this->pushToDatabase($delay, $queue, $job->payload, $job->attempts);
     }
@@ -161,11 +160,12 @@ class DatabaseQueue extends Queue
      * @param int $attempts
      * @return integer
      */
-    protected function pushToDatabase($delay,$queue,$payload,$attempts=0){
+    protected function pushToDatabase($delay, $queue, $payload, $attempts = 0)
+    {
         $queue = $this->getQueue($queue);
         $created_at = time();
-        $available_at = $this->getAvailableAt($delay,$created_at );
-        return $this->connector->createCommand()->insert('jobs',[
+        $available_at = $this->getAvailableAt($delay, $created_at);
+        return $this->connector->createCommand()->insert('jobs', [
             'queue' => $queue,
             'payload' => $payload,
             'attempts' => $attempts,
@@ -179,15 +179,15 @@ class DatabaseQueue extends Queue
     /**
      * 获取队列当前任务数量
      */
-    public function getJobCount($queue=null)
+    public function getJobCount($queue = null)
     {
         $queue = $this->getQueue($queue);
         return (new Query())
             ->select(['id'])
             ->from($this->table)
-            ->where(['reserved'=>0])
-            ->andWhere(['queue'=>$queue])
-            ->count("*",$this->connector);
+            ->where(['reserved' => 0])
+            ->andWhere(['queue' => $queue])
+            ->count("*", $this->connector);
     }
 
 
@@ -196,14 +196,14 @@ class DatabaseQueue extends Queue
      * @param $delay
      * @return mixed
      */
-    protected function getAvailableAt($delay,$createtime)
+    protected function getAvailableAt($delay, $createtime)
     {
         return $createtime + $delay;
     }
 
     /**
      * 重新激活那些长时间未处理完的任务
-     * @param  string  $queue
+     * @param  string $queue
      * @return integer
      */
     protected function releaseJobsThatHaveBeenReservedTooLong($queue)
@@ -217,7 +217,7 @@ class DatabaseQueue extends Queue
     /**
      * 获取下一个可用的任务
      *
-     * @param  string|null  $queue
+     * @param  string|null $queue
      * @return \StdClass|null
      */
     protected function getNextAvailableJob($queue)
@@ -225,13 +225,13 @@ class DatabaseQueue extends Queue
         $now = time();
         $sql = "select * from {$this->table} where queue='{$this->getQueue($queue)}' and reserved=0 and available_at<={$now} ORDER BY id asc limit 1 for update";
         $job = \Yii::$app->db->createCommand($sql)->queryOne();
-        return $job ? (object) $job : null;
+        return $job ? (object)$job : null;
     }
 
     /**
      * 将任务标记为已处理
      *
-     * @param  string  $id
+     * @param  string $id
      * @return void
      */
     protected function markJobAsReserved($id)

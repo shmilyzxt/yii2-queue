@@ -8,12 +8,8 @@
 
 namespace shmilyzxt\queue\base;
 
-
-use common\tools\var_dumper;
 use SuperClosure\Serializer;
-use yii\base\Component;
 use yii\di\ServiceLocator;
-use yii\helpers\Json;
 
 abstract class Queue extends ServiceLocator
 {
@@ -40,14 +36,14 @@ abstract class Queue extends ServiceLocator
      * @var int
      */
     public $expire = 60;
-    
+
     /**
      * @var array 失败配置
      */
     public $failed;
 
     /**
-     * 任务事件配置 
+     * 任务事件配置
      * @var array
      */
     public $jobEvent = [];
@@ -59,7 +55,7 @@ abstract class Queue extends ServiceLocator
      * @param string $data
      * @param $queue
      */
-    abstract protected function push($job, $data = '', $queue=null);
+    abstract protected function push($job, $data = '', $queue = null);
 
     /**
      * 延时入队列
@@ -68,14 +64,14 @@ abstract class Queue extends ServiceLocator
      * @param string $data
      * @param $queue
      */
-    abstract protected function later($dealy,$job,$data='',$queue=null);
+    abstract protected function later($dealy, $job, $data = '', $queue = null);
 
     /**
      * 出队列
      * @param null $queue
-     * @return Job 
+     * @return Job
      */
-    abstract public function pop($queue=null);
+    abstract public function pop($queue = null);
 
     /**
      * 将一个任务重新加入队列
@@ -85,20 +81,20 @@ abstract class Queue extends ServiceLocator
      * @param int $attempts
      * @return mixed
      */
-    abstract public function release($queue, $job, $delay,$attempts=0);
+    abstract public function release($queue, $job, $delay, $attempts = 0);
 
     /**
      * 清空某个队列
      * @param null $queue 队列名称，为空则清空default队列
      * @return mixed
      */
-    abstract public function flush($queue=null);
+    abstract public function flush($queue = null);
 
     /**
      * 获取当前队列中等待执行的任务数量
      */
-    abstract public function getJobCount($queue=null);
-    
+    abstract public function getJobCount($queue = null);
+
     /**
      * 入队列
      * @param $job
@@ -107,10 +103,11 @@ abstract class Queue extends ServiceLocator
      * @return  mixed
      * @throws \Exception
      */
-    public function pushOn($job, $data = '', $queue=null){
-        if($this->canPush()){
-            return $this->push($job,$data,$queue);
-        }else{
+    public function pushOn($job, $data = '', $queue = null)
+    {
+        if ($this->canPush()) {
+            return $this->push($job, $data, $queue);
+        } else {
             throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
     }
@@ -124,19 +121,20 @@ abstract class Queue extends ServiceLocator
      * @return mixed
      * @throws \Exception
      */
-    public function laterOn($dealy, $job, $data = '', $queue=null){
-        if($this->canPush()){
-            return $this->later($dealy,$job,$data,$queue);
-        }else{
+    public function laterOn($dealy, $job, $data = '', $queue = null)
+    {
+        if ($this->canPush()) {
+            return $this->later($dealy, $job, $data, $queue);
+        } else {
             throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
     }
 
     /**
      * 将任务及任务相关数据打包成json
-     * @param  string  $job
-     * @param  mixed   $data
-     * @param  string  $queue
+     * @param  string $job
+     * @param  mixed $data
+     * @param  string $queue
      * @return string
      * @throws \Exception
      */
@@ -149,44 +147,43 @@ abstract class Queue extends ServiceLocator
 
             return serialize([
                 'type' => 'closure',
-                'job' => ['shmilyzxt\queue\helper\QueueClosure',$serialized],
+                'job' => ['shmilyzxt\queue\helper\QueueClosure', $serialized],
                 'data' => $data
             ]);
-        }
-        //类handler（必须实现handle方法）
+        } //类handler（必须实现handle方法）
         else if (is_object($job) && $job instanceof JobHandler) {
-            $json =  serialize([
+            $json = serialize([
                 'type' => 'class',
                 'job' => $job,
                 'data' => $this->prepareQueueData($data),
             ]);
             return $json;
-        }else if(is_array($job)){
-            if(count($job) != 2){
+        } else if (is_array($job)) {
+            if (count($job) != 2) {
                 throw new \Exception("wrong job handler!");
             }
 
             //类->方法  的方式
-            if(is_object($job[0]) && is_string($job[1])){
+            if (is_object($job[0]) && is_string($job[1])) {
                 return serialize([
                     'type' => 'classMethod',
-                    'job'  => $job,
+                    'job' => $job,
                     'data' => $this->prepareQueueData($data)
                 ]);
             }
 
             //类名::静态方法 的方式
-            if(is_string($job[0]) && is_string($job[1])){
+            if (is_string($job[0]) && is_string($job[1])) {
                 return serialize([
                     'type' => 'staticMethod',
-                    'job'  => $job,
+                    'job' => $job,
                     'data' => $this->prepareQueueData($data)
                 ]);
             }
         }
 
         //类名字符串的handler
-        return serialize(['type'=>'string','job'=>$job,'data'=>$this->prepareQueueData($data)]);
+        return serialize(['type' => 'string', 'job' => $job, 'data' => $this->prepareQueueData($data)]);
     }
 
     /**
@@ -212,8 +209,9 @@ abstract class Queue extends ServiceLocator
      * 检查队列是否已达最大任务量
      * @return bool
      */
-    protected function canPush(){
-        if($this->maxJob > 0 && $this->getJobCount() >= $this->maxJob){
+    protected function canPush()
+    {
+        if ($this->maxJob > 0 && $this->getJobCount() >= $this->maxJob) {
             return false;
         }
         return true;

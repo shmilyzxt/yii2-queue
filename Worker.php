@@ -21,7 +21,7 @@ class Worker
      * @param int $memory 允许使用的最大内存
      * @param int $sleep 每次检测的时间间隔
      */
-    public static function listen(Queue $queue,$queueName='default',$attempt=10,$memory=512,$sleep=3,$delay=0){
+    public static function listen(Queue $queue, $queueName = 'default', $attempt = 10, $memory = 512, $sleep = 3, $delay = 0){
         while (true){
             try{
                 $job = $queue->pop($queueName);

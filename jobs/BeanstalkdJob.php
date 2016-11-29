@@ -8,8 +8,6 @@
 
 namespace shmilyzxt\queue\jobs;
 
-
-use Pheanstalk\Pheanstalk;
 use shmilyzxt\queue\base\Job;
 
 class BeanstalkdJob extends Job
@@ -38,7 +36,7 @@ class BeanstalkdJob extends Job
     public function getAttempts()
     {
         $stats = $this->pheanstalk->statsJob($this->job);
-        return (int) $stats->reserves;
+        return (int)$stats->reserves;
     }
 
     /**
@@ -62,13 +60,13 @@ class BeanstalkdJob extends Job
 
     /**
      * 将任务重新假如队列
-     * @param  int   $delay
+     * @param  int $delay
      * @return void
      */
     public function release($delay = 0)
     {
         parent::release($delay);
-        $this->queueInstance->release($this->queue,$this->job,  $delay);
+        $this->queueInstance->release($this->queue, $this->job, $delay);
     }
 
     /**

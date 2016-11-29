@@ -8,12 +8,8 @@
 
 namespace shmilyzxt\queue\base;
 
-
-use common\tools\var_dumper;
-use PhpParser\Node\Expr\Closure;
 use SuperClosure\Serializer;
 use yii\base\Component;
-use yii\helpers\Json;
 
 abstract class Job extends Component
 {
@@ -69,7 +65,7 @@ abstract class Job extends Component
      * @return string
      */
     abstract public function getPayload();
-    
+
     /**
      * 检测任务是否被重新加入队列
      * @return bool
@@ -94,7 +90,7 @@ abstract class Job extends Component
      */
     public function delete()
     {
-        $this->trigger(self::EVENT_BEFORE_DELETE,new JobEvent(["job"=>$this,'payload'=>$this->getPayload()]));
+        $this->trigger(self::EVENT_BEFORE_DELETE, new JobEvent(["job" => $this, 'payload' => $this->getPayload()]));
         $this->deleted = true;
     }
 
@@ -109,7 +105,7 @@ abstract class Job extends Component
 
     /**
      * 将任务重新加入队列
-     * @param  int   $delay
+     * @param  int $delay
      * @return void
      */
     public function release($delay = 0)
@@ -123,37 +119,37 @@ abstract class Job extends Component
      */
     public function execute()
     {
-        $this->trigger(self::EVENT_BEFORE_EXECUTE,new JobEvent(["job"=>$this,'payload'=>$this->getPayload()]));
+        $this->trigger(self::EVENT_BEFORE_EXECUTE, new JobEvent(["job" => $this, 'payload' => $this->getPayload()]));
         $this->resolveAndFire();
     }
-    
+
     /**
      * 真正任务执行方法（调用hander的handle方法）
-     * @param  array  $payload
+     * @param  array $payload
      * @return void
      */
     protected function resolveAndFire()
     {
         $payload = $this->getPayload();
-        $payload = unserialize( $payload);
+        $payload = unserialize($payload);
         $type = $payload['type'];
         $class = $payload['job'];
 
-        if( $type == 'closure' && ($closure = (new Serializer())->unserialize($class[1])) instanceof \Closure){
+        if ($type == 'closure' && ($closure = (new Serializer())->unserialize($class[1])) instanceof \Closure) {
             $this->handler = $this->getHander($class[0]);
             $this->handler->closure = $closure;
-            $this->handler->handle($this,$payload['data']);
-        }else if($type == 'classMethod'){
-            $payload['job'][0]->$payload['job'][1]($this,$payload['data']);
-        }else if ($type == 'staticMethod'){
-            $payload['job'][0]::$payload['job'][1]($this,$payload['data']);    
-        }else{
+            $this->handler->handle($this, $payload['data']);
+        } else if ($type == 'classMethod') {
+            $payload['job'][0]->$payload['job'][1]($this, $payload['data']);
+        } else if ($type == 'staticMethod') {
+            $payload['job'][0]::$payload['job'][1]($this, $payload['data']);
+        } else {
             $this->handler = $this->getHander($class);
-            $this->handler->handle($this,$payload['data']);
+            $this->handler->handle($this, $payload['data']);
         }
-        
+
         //执行完任务后删除
-        if (! $this->isDeletedOrReleased()) {
+        if (!$this->isDeletedOrReleased()) {
             $this->delete();
         }
     }
@@ -166,47 +162,47 @@ abstract class Job extends Component
     public function failed()
     {
         $payload = $this->getPayload();
-        $payload = unserialize( $payload);
+        $payload = unserialize($payload);
         $type = $payload['type'];
         $class = $payload['job'];
 
-        if( $type == 'closure' && ($closure = (new Serializer())->unserialize($class[1])) instanceof \Closure){
+        if ($type == 'closure' && ($closure = (new Serializer())->unserialize($class[1])) instanceof \Closure) {
             $this->handler = $this->getHander($class[0]);
-        }else if($type == 'classMethod'){
+        } else if ($type == 'classMethod') {
             $this->handler = $payload['job'][0];
-        }else if ($type == 'staticMethod'){
+        } else if ($type == 'staticMethod') {
             $this->handler = $this->getHander($payload['job'][0]);
-        }else{
+        } else {
             $this->handler = $this->getHander($class);
         }
 
         //如果有自定义的failed方法，则调用
         if (method_exists($this->handler, 'failed')) {
-            $this->handler->failed($this,$payload['data']);
-        }
-        //如果没有自定义的方法，则检测是否将错误写入数据库
-        else{
-            if($this->queueInstance->failed['logFail'] === true){
+            $this->handler->failed($this, $payload['data']);
+        } //如果没有自定义的方法，则检测是否将错误写入数据库
+        else {
+            if ($this->queueInstance->failed['logFail'] === true) {
                 $failedProvider = \Yii::createObject($this->queueInstance->failed['provider']);
-                $failedProvider->log($this->queueInstance->className(),$this->getQueue(),$this->getPayload());
+                $failedProvider->log($this->queueInstance->className(), $this->getQueue(), $this->getPayload());
             }
         }
     }
 
     /**
      * 解析并还原payload数据
-     * @deprecated 
+     * @deprecated
      * @param $paylod
      * @return array|mixed
      */
-    protected function resolvePaylod($payload){
-        if(is_string($payload)){
+    protected function resolvePaylod($payload)
+    {
+        if (is_string($payload)) {
             return unserialize($payload);
         }
 
-        if(is_array($payload)){
+        if (is_array($payload)) {
             $ret = [];
-            foreach ($payload as $k => $v){
+            foreach ($payload as $k => $v) {
                 $this->resolvePaylod($v);
             }
             return $ret;
@@ -218,15 +214,16 @@ abstract class Job extends Component
     /**
      * 获取任务处理handler实例
      */
-    protected function getHander($class){
-        if(is_object($class) && $class instanceof JobHandler){
+    protected function getHander($class)
+    {
+        if (is_object($class) && $class instanceof JobHandler) {
             return $this->handler = $class;
-        }else{
-           return $this->handler = \Yii::$container->get($class);
+        } else {
+            return $this->handler = \Yii::$container->get($class);
         }
     }
-    
-    
+
+
     /**
      * 获取队列名称
      * @return string
@@ -248,7 +245,8 @@ abstract class Job extends Component
     /*
      * 属性设置
      */
-    public function setJob($job){
+    public function setJob($job)
+    {
         $this->job = $job;
     }
 
@@ -256,7 +254,8 @@ abstract class Job extends Component
      * 属性
      * @return mixed
      */
-    public function getJob(){
+    public function getJob()
+    {
         return $this->job;
     }
 
@@ -264,7 +263,8 @@ abstract class Job extends Component
      * 属性
      * @return mixed
      */
-    public function getqueueInstance(){
+    public function getqueueInstance()
+    {
         return $this->queueInstance;
     }
 
@@ -272,7 +272,8 @@ abstract class Job extends Component
      * 属性
      * @param $queueInstance
      */
-    public function setqueueInstance($queueInstance){
+    public function setqueueInstance($queueInstance)
+    {
         $this->queueInstance = $queueInstance;
     }
 }

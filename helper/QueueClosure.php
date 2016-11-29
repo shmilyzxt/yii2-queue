@@ -15,21 +15,21 @@ class QueueClosure extends JobHandler
     /**
      * @var \Closure
      */
-     public $closure;
+    public $closure;
 
     /**
      * Ö´ÐÐÈÎÎñ
      * @param   $job
-     * @param  array  $data
+     * @param  array $data
      * @return void
      * @throws \Exception
      */
-    public function handle ($job, $data)
+    public function handle($job, $data)
     {
-        if($this->closure instanceof \Closure){
+        if ($this->closure instanceof \Closure) {
             $closure = $this->closure;
-            $closure($job,$data);
-        }else{
+            $closure($job, $data);
+        } else {
             throw new \Exception("closure is wrong!");
         }
     }

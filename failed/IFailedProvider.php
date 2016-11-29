@@ -11,5 +11,5 @@ namespace shmilyzxt\queue\failed;
 
 interface IFailedProvider
 {
-    public function log($connector,$queue,$payload);
+    public function log($connector, $queue, $payload);
 }

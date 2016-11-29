@@ -11,7 +11,6 @@ namespace shmilyzxt\queue\jobs;
 
 use shmilyzxt\queue\base\Job;
 use shmilyzxt\queue\helper\ArrayHelper;
-use yii\helpers\Json;
 
 class RedisJob extends Job
 {
@@ -50,7 +49,7 @@ class RedisJob extends Job
     /**
      * Release the job back into the queue.
      *
-     * @param  int   $delay
+     * @param  int $delay
      * @return void
      */
     public function release($delay = 0)
