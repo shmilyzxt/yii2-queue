@@ -9,12 +9,18 @@
 namespace shmilyzxt\queue\base;
 
 
+use common\tools\var_dumper;
+use PhpParser\Node\Expr\Closure;
 use SuperClosure\Serializer;
 use yii\base\Component;
 use yii\helpers\Json;
 
 abstract class Job extends Component
 {
+    //事件
+    const EVENT_BEFORE_EXECUTE = 'beforeExecute';
+    const EVENT_BEFORE_DELETE = 'beforeDelete';
+
     /**
      * 任务所属队列的名称
      * @var string
@@ -88,6 +94,7 @@ abstract class Job extends Component
      */
     public function delete()
     {
+        $this->trigger(self::EVENT_BEFORE_DELETE,new JobEvent(["job"=>$this,'payload'=>$this->getPayload()]));
         $this->deleted = true;
     }
 
@@ -116,6 +123,7 @@ abstract class Job extends Component
      */
     public function execute()
     {
+        $this->trigger(self::EVENT_BEFORE_EXECUTE,new JobEvent(["job"=>$this,'payload'=>$this->getPayload()]));
         $this->resolveAndFire();
     }
     
@@ -131,8 +139,14 @@ abstract class Job extends Component
         $type = $payload['type'];
         $class = $payload['job'];
 
-        if( $type == 'closure' && ($closure = (new Serializer())->unserialize($class)) instanceof \Closure){
-            $closure($payload['data']);
+        if( $type == 'closure' && ($closure = (new Serializer())->unserialize($class[1])) instanceof \Closure){
+            $this->handler = $this->getHander($class[0]);
+            $this->handler->closure = $closure;
+            $this->handler->handle($this,$payload['data']);
+        }else if($type == 'classMethod'){
+            $payload['job'][0]->$payload['job'][1]($this,$payload['data']);
+        }else if ($type == 'staticMethod'){
+            $payload['job'][0]::$payload['job'][1]($this,$payload['data']);    
         }else{
             $this->handler = $this->getHander($class);
             $this->handler->handle($this,$payload['data']);
@@ -153,11 +167,29 @@ abstract class Job extends Component
     {
         $payload = $this->getPayload();
         $payload = unserialize( $payload);
+        $type = $payload['type'];
         $class = $payload['job'];
-        $this->handler = $this->getHander($class);
 
+        if( $type == 'closure' && ($closure = (new Serializer())->unserialize($class[1])) instanceof \Closure){
+            $this->handler = $this->getHander($class[0]);
+        }else if($type == 'classMethod'){
+            $this->handler = $payload['job'][0];
+        }else if ($type == 'staticMethod'){
+            $this->handler = $this->getHander($payload['job'][0]);
+        }else{
+            $this->handler = $this->getHander($class);
+        }
+
+        //如果有自定义的failed方法，则调用
         if (method_exists($this->handler, 'failed')) {
             $this->handler->failed($this,$payload['data']);
+        }
+        //如果没有自定义的方法，则检测是否将错误写入数据库
+        else{
+            if($this->queueInstance->failed['logFail'] === true){
+                $failedProvider = \Yii::createObject($this->queueInstance->failed['provider']);
+                $failedProvider->log($this->queueInstance->className(),$this->getQueue(),$this->getPayload());
+            }
         }
     }
 

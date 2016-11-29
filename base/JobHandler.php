@@ -15,14 +15,14 @@ abstract  class JobHandler
      * 从队列中拿到任务和相关数据后，需要对任务进行处理
      * @param  $job
      */
-    abstract public function handle(Job $job,$data);
+    abstract public function handle($job,$data);
 
     /**
      * 队列任务执行失败处理方法
      * @param $job
      * @return mixed
      */
-    public function failed($job,$data)
+    public function failed1($job,$data)
     {
         
     }

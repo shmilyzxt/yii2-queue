@@ -79,12 +79,15 @@ class BeanstalkdQueue extends Queue
         $job = $this->connector->watchOnly($queue)->reserve(0);
 
         if ($job instanceof \Pheanstalk\Job ) {
-            return \Yii::createObject([
+
+            $config = array_merge($this->jobEvent,[
                 'class' =>'shmilyzxt\queue\jobs\BeanstalkdJob',
                 'queue' => $queue,
                 'job' => $job,
                 'queueInstance' => $this,
             ]);
+            
+            return \Yii::createObject($config);
         }
         
         return false;

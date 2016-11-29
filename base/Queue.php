@@ -17,11 +17,6 @@ use yii\helpers\Json;
 
 abstract class Queue extends ServiceLocator
 {
-    const EVENT_BEFORE_PUSH = 'beforePush';
-    const EVENT_AFTER_PUSH = 'afterPush';
-    const EVENT_BEFORE_POP = 'beforePop';
-    const EVENT_AFTER_POP = 'afterPop';
-
     /**
      * 队列默认名称
      * @var string
@@ -45,6 +40,17 @@ abstract class Queue extends ServiceLocator
      * @var int
      */
     public $expire = 60;
+    
+    /**
+     * @var array 失败配置
+     */
+    public $failed;
+
+    /**
+     * 任务事件配置 
+     * @var array
+     */
+    public $jobEvent = [];
 
 
     /**
@@ -103,10 +109,7 @@ abstract class Queue extends ServiceLocator
      */
     public function pushOn($job, $data = '', $queue=null){
         if($this->canPush()){
-            $this->trigger(self::EVENT_BEFORE_PUSH);
-            $return =  $this->push($job,$data,$queue);
-            $this->trigger(self::EVENT_AFTER_PUSH);
-            return $return;
+            return $this->push($job,$data,$queue);
         }else{
             throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
@@ -123,10 +126,7 @@ abstract class Queue extends ServiceLocator
      */
     public function laterOn($dealy, $job, $data = '', $queue=null){
         if($this->canPush()){
-            $this->trigger(self::EVENT_BEFORE_PUSH);
-            $return = $this->later($dealy,$job,$data,$queue);
-            $this->trigger(self::EVENT_AFTER_PUSH);
-            return $return;
+            return $this->later($dealy,$job,$data,$queue);
         }else{
             throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
@@ -138,27 +138,54 @@ abstract class Queue extends ServiceLocator
      * @param  mixed   $data
      * @param  string  $queue
      * @return string
+     * @throws \Exception
      */
     protected function createPayload($job, $data = '', $queue = null)
     {
+        //闭包的handler
         if ($job instanceof \Closure) {
             $serializer = new Serializer();
             $serialized = $serializer->serialize($job);
 
             return serialize([
                 'type' => 'closure',
-                'job' => $serialized,
+                'job' => ['shmilyzxt\queue\helper\QueueClosure',$serialized],
                 'data' => $data
             ]);
-        }else if (is_object($job) && $job instanceof JobHandler) {
+        }
+        //类handler（必须实现handle方法）
+        else if (is_object($job) && $job instanceof JobHandler) {
             $json =  serialize([
                 'type' => 'class',
                 'job' => $job,
                 'data' => $this->prepareQueueData($data),
             ]);
             return $json;
+        }else if(is_array($job)){
+            if(count($job) != 2){
+                throw new \Exception("wrong job handler!");
+            }
+
+            //类->方法  的方式
+            if(is_object($job[0]) && is_string($job[1])){
+                return serialize([
+                    'type' => 'classMethod',
+                    'job'  => $job,
+                    'data' => $this->prepareQueueData($data)
+                ]);
+            }
+
+            //类名::静态方法 的方式
+            if(is_string($job[0]) && is_string($job[1])){
+                return serialize([
+                    'type' => 'staticMethod',
+                    'job'  => $job,
+                    'data' => $this->prepareQueueData($data)
+                ]);
+            }
         }
 
+        //类名字符串的handler
         return serialize(['type'=>'string','job'=>$job,'data'=>$this->prepareQueueData($data)]);
     }
 

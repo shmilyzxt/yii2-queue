@@ -82,12 +82,14 @@ class RedisQueue extends Queue
         if (! is_null($job)) {
             $this->connector->zadd($queue.':reserved', time() + $this->expire, $job);
 
-            return \Yii::createObject([
+            $config = array_merge($this->jobEvent,[
                 'class' =>'shmilyzxt\queue\jobs\RedisJob',
                 'queue' => $original,
                 'job' => $job,
                 'queueInstance' => $this,
             ]);
+            
+            return \Yii::createObject($config);
         }
 
         return false;

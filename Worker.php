@@ -21,24 +21,32 @@ class Worker
      * @param int $memory 允许使用的最大内存
      * @param int $sleep 每次检测的时间间隔
      */
-    public static function listen(Queue $queue,$queueName='default',$attempt=10,$memory=128,$sleep=3){
+    public static function listen(Queue $queue,$queueName='default',$attempt=10,$memory=512,$sleep=3,$delay=0){
         while (true){
-            $job = $queue->pop($queueName);
+            try{
+                $job = $queue->pop($queueName);
+            }catch (\Exception $e){
+                continue;
+            }
+
             if($job instanceof Job){
-               // echo $queue->getJobCount($queueName)."\r\n";
+                // echo $queue->getJobCount($queueName)."\r\n";
                 //echo $job->getAttempts()."\r\n";
-                if($job->getAttempts() > $attempt){
+                if($attempt > 0 && $job->getAttempts() > $attempt){
                     $job->failed();
                 }else{
                     try{
                         $job->execute();
                     }catch (\Exception $e){
-                        $job->release();
+                        if (! $job->isDeleted()) {
+                            $job->release($delay);
+                        }
                     }
                 }
             }else{
                 self::sleep($sleep);
             }
+
 
             if (self::memoryExceeded($memory)) {
                 self::stop();

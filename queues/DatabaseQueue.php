@@ -9,6 +9,7 @@
  */
 namespace shmilyzxt\queue\queues;
 
+use common\tools\var_dumper;
 use shmilyzxt\queue\base\Queue;
 use yii\db\Query;
 
@@ -95,15 +96,17 @@ class DatabaseQueue extends Queue
         if ($job = $this->getNextAvailableJob($queue)) {
             $this->markJobAsReserved($job->id);
             $tran->commit();
-            return \Yii::createObject([
+
+            $config = array_merge($this->jobEvent,[
                 'class' =>'shmilyzxt\queue\jobs\DatabaseJob',
                 'queue' => $queue,
                 'job' => $job,
                 'queueInstance' => $this,
             ]);
+            
+            return \Yii::createObject($config);
 
         }
-
         $tran->commit();
         return false;
     }
