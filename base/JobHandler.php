@@ -22,10 +22,8 @@ abstract  class JobHandler
      * @param $job
      * @return mixed
      */
-    public function failed1($job,$data)
-    {
-        
-    }
+    /*abstract public function failed($job,$data);*/
+   
 
     /**
      * @return string
