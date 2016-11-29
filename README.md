@@ -209,4 +209,4 @@ yii worker/listen default 10 128 3 0
 
 6：任务事件支持:
 目前任务支持2个事件（beforeExecute,beforeDelete）, beforeExecute是在任务被pop出来之后，执行之前执行。beforeDelete是任务在被删除之前执行
-您可以使用这两个事件做自定易操作，只需要像上面配置文件里配置 jobEvent那样绑定事件处理handler即可。
+您可以使用这两个事件做自定易操作，只需要像上面配置文件里配置 jobEvent那样绑定事件处理handler即可 1。
