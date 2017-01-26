@@ -24,6 +24,12 @@ class ActivemqQueue extends Queue
         }
     }
 
+    /**
+     * Èë¶ÓÁÐ
+     * @param $job
+     * @param string $data
+     * @param null $queue
+     */
     protected function push($job, $data = '', $queue = null)
     {
         $queue = $this->getQueue($queue);
@@ -32,6 +38,7 @@ class ActivemqQueue extends Queue
 
     protected function later($dealy, $job, $data = '', $queue = null)
     {
+        throw new \Exception("ActiveMq does not support this feature for now!");
         $queue = $this->getQueue($queue);
         $this->pushDataToQueue($job,$data,$queue, $dealy,0,0);
     }
