@@ -8,6 +8,7 @@
  */
 namespace shmilyzxt\queue;
 
+use common\tools\var_dumper;
 use shmilyzxt\queue\base\Job;
 use shmilyzxt\queue\base\Queue;
 
@@ -26,17 +27,18 @@ class Worker
             try{
                 $job = $queue->pop($queueName);
             }catch (\Exception $e){
+                throw $e;
                 continue;
             }
 
             if($job instanceof Job){
-                // echo $queue->getJobCount($queueName)."\r\n";
-                //echo $job->getAttempts()."\r\n";
                 if($attempt > 0 && $job->getAttempts() > $attempt){
                     $job->failed();
                 }else{
                     try{
+                        //throw new \Exception("test failed");
                         $job->execute();
+
                     }catch (\Exception $e){
                         if (! $job->isDeleted()) {
                             $job->release($delay);

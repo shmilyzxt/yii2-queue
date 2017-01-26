@@ -66,7 +66,7 @@ class BeanstalkdJob extends Job
     public function release($delay = 0)
     {
         parent::release($delay);
-        $this->queueInstance->release($this->queue, $this->job, $delay);
+        $this->queueInstance->release($this->queue, $this->job, $delay,$this->getAttempts()+1);
     }
 
     /**
