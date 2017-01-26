@@ -45,6 +45,10 @@ class ActivemqQueue extends Queue
 
     public function pop($queue = null)
     {
+        /**
+         * TODO
+         * later 思路，先pop出来，看看headers的delay是否为0，如果为0，直接生成任务类返回，如果不为0，比较timestamp和delay，满足的执行
+         */
         $queue = $this->getQueue($queue);
         $this->connector->subscribe($queue);
         if($this->connector->hasFrame()){
