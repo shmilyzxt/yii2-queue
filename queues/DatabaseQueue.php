@@ -87,7 +87,7 @@ class DatabaseQueue extends Queue
         $queue = $this->getQueue($queue);
 
         if (!is_null($this->expire)) {
-            $this->releaseJobsThatHaveBeenReservedTooLong($queue);
+            //$this->releaseJobsThatHaveBeenReservedTooLong($queue);
         }
 
         $tran = $this->connector->beginTransaction();
