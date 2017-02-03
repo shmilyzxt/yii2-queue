@@ -22,7 +22,11 @@ class ActivemqConnector implements IConnector
             throw new \Exception("you need php_stomp extension!");
         }
 
-        $stomp = new \Stomp($this->broker);
+        try{
+            $stomp = new \Stomp($this->broker);
+        }catch (\Exception $e){
+            throw  new \Exception("can not connect activemq:".$this->broker);
+        }
         $stomp->setReadTimeout($this->timeout);
         return $stomp;
     }

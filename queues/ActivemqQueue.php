@@ -1,7 +1,7 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: zhenxiaotao
+ * ActiveMQ队列
+ * User: 49783121@qq.com
  * Date: 2017/1/26
  * Time: 13:40
  */
@@ -34,21 +34,19 @@ class ActivemqQueue extends Queue
     {
         $queue = $this->getQueue($queue);
         $this->pushDataToQueue($job,$data,$queue, 0,0,0);
+        
+        //更新
     }
 
     protected function later($dealy, $job, $data = '', $queue = null)
     {
-        throw new \Exception("ActiveMq does not support this feature for now!");
-        $queue = $this->getQueue($queue);
-        $this->pushDataToQueue($job,$data,$queue, $dealy,0,0);
+        throw new \Exception("ActiveMQ does not support this feature for now!");
+        //$queue = $this->getQueue($queue);
+        //$this->pushDataToQueue($job,$data,$queue, $dealy,0,0);
     }
 
     public function pop($queue = null)
     {
-        /**
-         * TODO
-         * later 思路，先pop出来，看看headers的delay是否为0，如果为0，直接生成任务类返回，如果不为0，比较timestamp和delay，满足的执行
-         */
         $queue = $this->getQueue($queue);
         $this->connector->subscribe($queue);
         if($this->connector->hasFrame()){
