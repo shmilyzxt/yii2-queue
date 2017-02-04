@@ -95,7 +95,7 @@ class BeanstalkdQueue extends Queue
      * @param $job
      * @param $delay
      * @param int $attempts
-     * @return
+     * @return mixed
      */
     public function release($queue, $job, $delay, $attempts = 0)
     {
