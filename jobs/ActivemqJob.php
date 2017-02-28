@@ -25,7 +25,7 @@ class ActivemqJob extends Job
     }
 
     /**
-     * É¾³ıÒ»¸öÈÎÎñ
+     * åˆ é™¤ä¸€ä¸ªä»»åŠ¡
      * @return void
      */
     public function delete()
@@ -34,7 +34,7 @@ class ActivemqJob extends Job
     }
 
     /**
-     * ½«ÈÎÎñÖØĞÂ¼ÙÈç¶ÓÁĞ
+     * å°†ä»»åŠ¡é‡æ–°å‡å¦‚é˜Ÿåˆ—
      * @param  int $delay
      * @return void
      */

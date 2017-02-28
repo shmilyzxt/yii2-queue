@@ -1,6 +1,6 @@
 <?php
 /**
- * pheanstalk链接器，用于操作beanstalkd队列
+ * pheanstalk閾炬帴鍣紝鐢ㄤ簬鎿嶄綔beanstalkd闃熷垪
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/28
  * Time: 14:11

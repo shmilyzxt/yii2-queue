@@ -1,6 +1,6 @@
 <?php
 /**
- * activeMq stompÁ´½ÓÆ÷
+ * activeMq stompé“¾æŽ¥å™¨
  * User: zhenxiaotao
  * Date: 2017/1/26
  * Time: 13:28

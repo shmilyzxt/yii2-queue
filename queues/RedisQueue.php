@@ -1,8 +1,8 @@
 <?php
 /**
- * redis¶ÓÁĞ
- * pushÊÇÍ¨¹ıredisÁĞ±íÊµÏÖ¶ÓÁĞ
- * laterÊÇÍ¨¹ıredisÓĞĞò¼¯ºÏÊµÏÖ¶ÓÁĞ
+ * redisé˜Ÿåˆ—
+ * pushæ˜¯é€šè¿‡redisåˆ—è¡¨å®ç°é˜Ÿåˆ—
+ * lateræ˜¯é€šè¿‡redisæœ‰åºé›†åˆå®ç°é˜Ÿåˆ—
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/23
  * Time: 17:13
@@ -16,7 +16,7 @@ use shmilyzxt\queue\helper\ArrayHelper;
 class RedisQueue extends Queue
 {
     /**
-     * predisÁ¬½ÓÊµÀı
+     * predisè¿æ¥å®ä¾‹
      * @var \Predis\Client
      */
     public $connector;
@@ -36,7 +36,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Èë¶ÓÁĞ
+     * å…¥é˜Ÿåˆ—
      * @param $job
      * @param string $data
      * @param null $queue
@@ -48,7 +48,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ÑÓÊ±ÈÎÎñÈë¶ÓÁĞ
+     * å»¶æ—¶ä»»åŠ¡å…¥é˜Ÿåˆ—
      * @param $dealy
      * @param $job
      * @param string $data
@@ -61,7 +61,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ³ö¶ÓÁĞ
+     * å‡ºé˜Ÿåˆ—
      * @param null $queue
      * @return object
      * @throws \yii\base\InvalidConfigException
@@ -94,7 +94,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * »ñÈ¡¶ÓÁĞµ±Ç°ÈÎÎñÊı = Ö´ĞĞ¶ÓÁĞÈÎÎñÊı + µÈ´ı¶ÓÁĞÈÎÎñÊı
+     * è·å–é˜Ÿåˆ—å½“å‰ä»»åŠ¡æ•° = æ‰§è¡Œé˜Ÿåˆ—ä»»åŠ¡æ•° + ç­‰å¾…é˜Ÿåˆ—ä»»åŠ¡æ•°
      * @param null $queue
      * @return mixed
      */
@@ -105,8 +105,8 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ½«ÈÎÎñÖØĞÂ¼ÓÈë¶ÓÁĞÖĞ
-     * ´ËÊ±£¬ÈÎÎñµÄ³¢ÊÔ´ÎÊıÒª¼Ó1
+     * å°†ä»»åŠ¡é‡æ–°åŠ å…¥é˜Ÿåˆ—ä¸­
+     * æ­¤æ—¶ï¼Œä»»åŠ¡çš„å°è¯•æ¬¡æ•°è¦åŠ 1
      * @param  string $queue
      * @param  string $payload
      * @param  int $delay
@@ -120,7 +120,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ¸ø¶ÓÁĞÊı¾İÌí¼ÓidºÍattempts×Ö¶Î
+     * ç»™é˜Ÿåˆ—æ•°æ®æ·»åŠ idå’Œattemptså­—æ®µ
      * @param  string $job
      * @param  mixed $data
      * @param  string $queue
@@ -134,7 +134,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ´´½¨Ò»¸öËæ»ú´®×÷Îªid
+     * åˆ›å»ºä¸€ä¸ªéšæœºä¸²ä½œä¸ºid
      * @param int $length
      * @return string
      */
@@ -145,7 +145,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * »ñÈ¡¶ÓÁĞÃû³Æ£¨¼´redisÀïÃæµÄkey£©
+     * è·å–é˜Ÿåˆ—åç§°ï¼ˆå³redisé‡Œé¢çš„keyï¼‰
      * @param  string|null $queue
      * @return string
      */
@@ -155,7 +155,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * µ±ÑÓÊ±ÈÎÎñµ½´óÖ´ĞĞÊ±¼äÊ±£¬½«ÑÓÊ±ÈÎÎñ´ÓÑÓÊ±ÈÎÎñ¼¯ºÏÖĞÒÆ¶¯µ½Ö÷Ö´ĞĞ¶ÓÁĞÖĞ
+     * å½“å»¶æ—¶ä»»åŠ¡åˆ°å¤§æ‰§è¡Œæ—¶é—´æ—¶ï¼Œå°†å»¶æ—¶ä»»åŠ¡ä»å»¶æ—¶ä»»åŠ¡é›†åˆä¸­ç§»åŠ¨åˆ°ä¸»æ‰§è¡Œé˜Ÿåˆ—ä¸­
      * @param  string $from
      * @param  string $to
      * @return void
@@ -164,7 +164,7 @@ class RedisQueue extends Queue
     {
         $options = ['cas' => true, 'watch' => $from, 'retry' => 10];
         $this->connector->transaction($options, function ($transaction) use ($from, $to) {
-            //Ê×ÏÈĞèÒª»ñÈ¡ÑÓÊ±¼¯ºÏÀïµÄËùÓĞÒÑ¾­µ½Ö´ĞĞÊ±¼äµÄÈÎÎñ£¬È»ºó°ÑÕâĞ©ÈÎÎñ×ªÒÆµ½Ö÷Ö´ĞĞ¶ÓÁĞÁĞ±íÖĞ£¬ÕâÀïÊ¹ÓÃÁËredisÊÂÎñ¡£
+            //é¦–å…ˆéœ€è¦è·å–å»¶æ—¶é›†åˆé‡Œçš„æ‰€æœ‰å·²ç»åˆ°æ‰§è¡Œæ—¶é—´çš„ä»»åŠ¡ï¼Œç„¶åæŠŠè¿™äº›ä»»åŠ¡è½¬ç§»åˆ°ä¸»æ‰§è¡Œé˜Ÿåˆ—åˆ—è¡¨ä¸­ï¼Œè¿™é‡Œä½¿ç”¨äº†redisäº‹åŠ¡ã€‚
             $jobs = $this->getExpiredJobs(
                 $transaction, $from, $time = time()
             );
@@ -177,7 +177,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ´ÓÒÑ´¦Àí¼¯ºÏÖĞÉ¾³ıÒ»¸öÈÎÎñ
+     * ä»å·²å¤„ç†é›†åˆä¸­åˆ é™¤ä¸€ä¸ªä»»åŠ¡
      * @param  string $queue
      * @param  string $job
      * @return void
@@ -188,7 +188,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ´ÓÖ¸¶¨¶ÓÁĞÉ¾³ı¹ıÆÚÈÎÎñ
+     * ä»æŒ‡å®šé˜Ÿåˆ—åˆ é™¤è¿‡æœŸä»»åŠ¡
      * @param  \Predis\Transaction\MultiExec $transaction
      * @param  string $from
      * @param  int $time
@@ -201,7 +201,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ½«ÈÎÎñ´ÓÒ»¸ö¶ÓÁĞÒÆ¶¯µ½ÁíÒ»¸ö¶ÓÁĞ
+     * å°†ä»»åŠ¡ä»ä¸€ä¸ªé˜Ÿåˆ—ç§»åŠ¨åˆ°å¦ä¸€ä¸ªé˜Ÿåˆ—
      * @param  \Predis\Transaction\MultiExec $transaction
      * @param  string $to
      * @param  array $jobs
@@ -213,7 +213,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ºÏ²¢µÈ´ıÖ´ĞĞºÍÒÑ¾­´¦ÀíµÄÈÎÎñ
+     * åˆå¹¶ç­‰å¾…æ‰§è¡Œå’Œå·²ç»å¤„ç†çš„ä»»åŠ¡
      * @param  string $queue
      * @return void
      */
@@ -224,7 +224,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ÔÚÊäÈëÊı¾İÖĞÌí¼ÓĞÂµÄ×Ö¶Î
+     * åœ¨è¾“å…¥æ•°æ®ä¸­æ·»åŠ æ–°çš„å­—æ®µ
      * @param  string $payload
      * @param  string $key
      * @param  string $value
@@ -238,7 +238,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * ´ÓÖ¸¶¨¶ÓÁĞÖĞ»ñÈ¡ËùÓĞ³¬Ê±µÄÈÎÎñ
+     * ä»æŒ‡å®šé˜Ÿåˆ—ä¸­è·å–æ‰€æœ‰è¶…æ—¶çš„ä»»åŠ¡
      * @param  \Predis\Transaction\MultiExec $transaction
      * @param  string $from
      * @param  int $time
@@ -250,7 +250,7 @@ class RedisQueue extends Queue
     }
 
     /**
-     * Çå¿ÕÖ¸¶¨¶ÓÁĞ
+     * æ¸…ç©ºæŒ‡å®šé˜Ÿåˆ—
      * @param null $queue
      * @return integer
      * @throws \Exception execution failed

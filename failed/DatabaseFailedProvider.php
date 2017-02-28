@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Êý¾Ý¿â±í¼ÇÂ¼·½Ê½½øÐÐÈÎÎñÊ§°Ü´¦Àí
+ * æ•°æ®åº“è¡¨è®°å½•æ–¹å¼è¿›è¡Œä»»åŠ¡å¤±è´¥å¤„ç†
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/29
  * Time: 14:00
@@ -13,13 +13,13 @@ use yii\base\Component;
 class DatabaseFailedProvider extends Component implements IFailedProvider
 {
     /**
-     * Êý¾Ý¿âÁ´½ÓÊµÀý
+     * æ•°æ®åº“é“¾æŽ¥å®žä¾‹
      * @var \Yii\db\Connection
      */
     public $db;
 
     /**
-     * ¼ÇÂ¼´íÎóÐÅÏ¢µÄ±í
+     * è®°å½•é”™è¯¯ä¿¡æ¯çš„è¡¨
      * @var string
      */
     public $table = 'failed_jobs';
@@ -34,7 +34,7 @@ class DatabaseFailedProvider extends Component implements IFailedProvider
     }
 
     /**
-     * ½«Ê§°ÜÈÕÖ¾Ð´ÈëÊý¾Ý¿â
+     * å°†å¤±è´¥æ—¥å¿—å†™å…¥æ•°æ®åº“
      */
     public function log($connector, $queue, $payload)
     {

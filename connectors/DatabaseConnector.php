@@ -1,6 +1,6 @@
 <?php
 /**
- * 数据库连接器（使用yii的）
+ * 鏁版嵁搴撹繛鎺ュ櫒锛堜娇鐢▂ii鐨勶級
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/25
  * Time: 17:35

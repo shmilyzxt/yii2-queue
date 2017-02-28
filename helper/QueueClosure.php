@@ -1,6 +1,6 @@
 <?php
 /**
- * 处理jobhandler为closure类型的的任务
+ * 澶勭悊jobhandler涓篶losure绫诲瀷鐨勭殑浠诲姟
  * User: zhenxiaotao
  * Date: 2016/11/29
  * Time: 10:56
@@ -18,7 +18,7 @@ class QueueClosure extends JobHandler
     public $closure;
 
     /**
-     * 执行任务
+     * 鎵ц浠诲姟
      * @param   $job
      * @param  array $data
      * @return void

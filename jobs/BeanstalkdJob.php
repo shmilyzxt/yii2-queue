@@ -1,6 +1,6 @@
 <?php
 /**
- * Beanstalkd ¶ÓÁÐÈÎÎñ.
+ * Beanstalkd é˜Ÿåˆ—ä»»åŠ¡.
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/28
  * Time: 14:15
@@ -30,7 +30,7 @@ class BeanstalkdJob extends Job
 
 
     /**
-     * »ñÈ¡ÈÎÎñ³¢ÊÔ´ÎÊý
+     * èŽ·å–ä»»åŠ¡å°è¯•æ¬¡æ•°
      * @return int
      */
     public function getAttempts()
@@ -40,7 +40,7 @@ class BeanstalkdJob extends Job
     }
 
     /**
-     * »ñÈ¡ÈÎÎñÊý¾Ý
+     * èŽ·å–ä»»åŠ¡æ•°æ®
      * @return string
      */
     public function getPayload()
@@ -49,7 +49,7 @@ class BeanstalkdJob extends Job
     }
 
     /**
-     * É¾³ýÒ»¸öÈÎÎñ
+     * åˆ é™¤ä¸€ä¸ªä»»åŠ¡
      * @return void
      */
     public function delete()
@@ -59,7 +59,7 @@ class BeanstalkdJob extends Job
     }
 
     /**
-     * ½«ÈÎÎñÖØÐÂ¼ÙÈç¶ÓÁÐ
+     * å°†ä»»åŠ¡é‡æ–°å‡å¦‚é˜Ÿåˆ—
      * @param  int $delay
      * @return void
      */
@@ -70,7 +70,7 @@ class BeanstalkdJob extends Job
     }
 
     /**
-     * ÐÝÃßÒ»¸öÈÎÎñ£¨beanstalkdÌØÓÐ¹¦ÄÜ£©
+     * ä¼‘çœ ä¸€ä¸ªä»»åŠ¡ï¼ˆbeanstalkdç‰¹æœ‰åŠŸèƒ½ï¼‰
      * @return void
      */
     public function bury()

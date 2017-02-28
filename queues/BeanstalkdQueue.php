@@ -1,6 +1,6 @@
 <?php
 /**
- * beanstalkd¶ÓÁÐ
+ * beanstalkdé˜Ÿåˆ—
  * User: shmilyzxt 49783121@qq.com
  * Date: 2016/11/28
  * Time: 14:16
@@ -14,7 +14,7 @@ use shmilyzxt\queue\base\Queue;
 class BeanstalkdQueue extends Queue
 {
     /**
-     * PheanstalkÁ´½ÓÊµÀý
+     * Pheanstalké“¾æŽ¥å®žä¾‹
      * @var \Pheanstalk\Pheanstalk
      */
     public $connector;
@@ -34,7 +34,7 @@ class BeanstalkdQueue extends Queue
     }
 
     /**
-     * ½«Ò»¸öÈÎÎñ¼ÓÈë¶ÓÁÐ
+     * å°†ä¸€ä¸ªä»»åŠ¡åŠ å…¥é˜Ÿåˆ—
      * @param $job
      * @param string $data
      * @param null $queue
@@ -48,7 +48,7 @@ class BeanstalkdQueue extends Queue
     }
 
     /**
-     * ½«Ò»¸öÑÓÊ±ÈÎÎñ¼ÓÈë¶ÓÁÐ
+     * å°†ä¸€ä¸ªå»¶æ—¶ä»»åŠ¡åŠ å…¥é˜Ÿåˆ—
      * @param $dealy
      * @param $job
      * @param string $data
@@ -64,7 +64,7 @@ class BeanstalkdQueue extends Queue
 
 
     /**
-     * ´Ó¶ÓÁÐÖÐÈ¡³öÒ»¸öÈÎÎñ
+     * ä»Žé˜Ÿåˆ—ä¸­å–å‡ºä¸€ä¸ªä»»åŠ¡
      * @param null $queue
      * @return object
      * @throws \yii\base\InvalidConfigException
@@ -90,7 +90,7 @@ class BeanstalkdQueue extends Queue
     }
 
     /**
-     * ½«Ò»¸öÈÎÎñÖØÐÂ¼ÓÈë¶ÓÁÐ
+     * å°†ä¸€ä¸ªä»»åŠ¡é‡æ–°åŠ å…¥é˜Ÿåˆ—
      * @param $queue
      * @param $job
      * @param $delay
@@ -104,7 +104,7 @@ class BeanstalkdQueue extends Queue
     }
 
     /**
-     * Çå¿Õ¶ÓÁÐÈÎÎñ
+     * æ¸…ç©ºé˜Ÿåˆ—ä»»åŠ¡
      * @param null $queue
      */
     public function flush($queue = null)
@@ -120,7 +120,7 @@ class BeanstalkdQueue extends Queue
     }
 
     /**
-     * »ñÈ¡tubeÖÐµÄÈÎÎñÊýÁ¿£¨readyµÄ+delayµÄ£©
+     * èŽ·å–tubeä¸­çš„ä»»åŠ¡æ•°é‡ï¼ˆreadyçš„+delayçš„ï¼‰
      * @param null $queue
      */
     public function getJobCount($queue = null)
@@ -131,7 +131,7 @@ class BeanstalkdQueue extends Queue
     }
 
     /**
-     * ºóÈ¥µ±Ç°beanstalkdÀïÃæ±»¼àÌýµÄtube
+     * åŽåŽ»å½“å‰beanstalkdé‡Œé¢è¢«ç›‘å¬çš„tube
      * @return array
      */
     public function listTubesWatched()

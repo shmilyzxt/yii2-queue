@@ -1,6 +1,6 @@
 <?php
 /**
- * ActiveMQ¶ÓÁÐ
+ * ActiveMQé˜Ÿåˆ—
  * User: 49783121@qq.com
  * Date: 2017/1/26
  * Time: 13:40
@@ -17,7 +17,7 @@ class ActivemqQueue extends Queue
 {
     public function init()
     {
-        parent::init(); 
+        parent::init();
         if(!$this->connector instanceof \Stomp){
             \Yii::$container->setSingleton('connector', $this->connector);
             $this->connector = \Yii::$container->get("connector")->connect();
@@ -25,7 +25,7 @@ class ActivemqQueue extends Queue
     }
 
     /**
-     * Èë¶ÓÁÐ
+     * å…¥é˜Ÿåˆ—
      * @param $job
      * @param string $data
      * @param null $queue
@@ -34,8 +34,8 @@ class ActivemqQueue extends Queue
     {
         $queue = $this->getQueue($queue);
         $this->pushDataToQueue($job,$data,$queue, 0,0,0);
-        
-        //¸üÐÂ
+
+        //æ›´æ–°
     }
 
     protected function later($dealy, $job, $data = '', $queue = null)
@@ -87,7 +87,7 @@ class ActivemqQueue extends Queue
     {
         throw new \Exception("ActiveMq does not support this method!");
     }
-    
+
     private function pushDataToQueue($job,$data,$queue,$delay=0,$rserved=0,$attempts=0){
         $this->connector->begin("push");
         $this->connector->send($queue, $this->createPayload($job,$data,$queue), ['persistent'=> true,'delay'=>$delay,'reserved'=>$rserved,'attempts'=>$attempts]);
