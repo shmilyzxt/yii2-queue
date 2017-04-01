@@ -25,6 +25,7 @@ class Worker
     public static function listen(Queue $queue, $queueName = 'default', $attempt = 10, $memory = 512, $sleep = 3, $delay = 0){
         while (true){
             try{
+
                 $job = $queue->pop($queueName);
             }catch (\Exception $e){
                 throw $e;
