@@ -48,6 +48,9 @@ abstract class Queue extends ServiceLocator
      */
     public $jobEvent = [];
 
+    //事件
+    const EVENT_BEFORE_PUSH = 'beforePush';
+    const EVENT_AFTER_PUSH = 'afterPush';
 
     /**
      * 入队列
@@ -106,7 +109,10 @@ abstract class Queue extends ServiceLocator
     public function pushOn($job, $data = '', $queue = null)
     {
         if ($this->canPush()) {
-            return $this->push($job, $data, $queue);
+            $this->trigger(self::EVENT_BEFORE_PUSH);
+            $ret = $this->push($job, $data, $queue);
+            $this->trigger(self::EVENT_AFTER_PUSH);
+            return $ret;
         } else {
             throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
@@ -124,7 +130,10 @@ abstract class Queue extends ServiceLocator
     public function laterOn($dealy, $job, $data = '', $queue = null)
     {
         if ($this->canPush()) {
-            return $this->later($dealy, $job, $data, $queue);
+            $this->trigger(self::EVENT_BEFORE_PUSH);
+            $ret = $this->later($dealy, $job, $data, $queue);
+            $this->trigger(self::EVENT_AFTER_PUSH);
+            return $ret;
         } else {
             throw new \Exception("max jobs number exceed! the max jobs number is {$this->maxJob}");
         }
