@@ -27,7 +27,7 @@ class Worker
             try{
                 $job = $queue->pop($queueName);
             }catch (\Exception $e){
-                throw $e;
+                throw $e;//正式使用环境要忽略异常或者记录异常
                 continue;
             }
 
