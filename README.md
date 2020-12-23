@@ -14,13 +14,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist shmilyzxt/yii2-queue "dev-master"
+php composer.phar require --prefer-dist shmilyzxt/yii2-queue "dev-dev"
 ```
 
 or add
 
 ```
-"shmilyzxt/yii2-queue": "dev-master"
+"shmilyzxt/yii2-queue": "dev-dev"
 ```
 
 to the require section of your `composer.json` file.
